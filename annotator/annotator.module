@@ -1,0 +1,48 @@
+<?php
+
+/*function annotator_preprocess_page()
+{
+    drupal_add_css('http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css','external');
+}*/
+/**
+* @file
+* A block module that displays three buttons: delete, text and image 
+*/
+function annotator_help($path, $arg) 
+{
+    switch ($path) 
+    {
+        case "admin/help#annotator":
+            return '<p>' . 
+                t("Displays edits and deletes image or text annotations in AustESE/calliope") 
+                . '</p>';
+            break;
+  }
+}
+/**
+* Implements hook_block_info().
+*/
+function annotator_block_info() 
+{
+    $blocks['annotator'] = array(
+        'info' => t('Annotator'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    return $blocks;
+}
+function annotator_block_view($delta = '')
+{
+    $block = array();
+    switch ($delta)
+    {
+        case 'annotator':
+           if (user_access('access content'))  
+           {
+                $block['content'] = '<a href="#" id="pictann"><i title="'.t("annotate with a picture").
+		'" class="fa fa-picture-o fa-lg"></i></a>&nbsp;&nbsp;'.
+		'<a href="#" id="textann"><i title="'.t("annotate with text").'" class="fa fa-comment fa-lg"></i></a>&nbsp;&nbsp;';
+           }
+    }
+    return $block;
+}
+

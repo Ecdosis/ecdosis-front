@@ -1,0 +1,5 @@
+name = Find 
+description = A simple indexed search interface
+core = 7.x
+configure = admin/config/content/find  
+

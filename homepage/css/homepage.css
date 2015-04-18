@@ -1,0 +1,60 @@
+#container { float: right; text-align: right }
+.search { 
+        border: 1px solid #d0d0d0;
+	color: rgb(188, 188, 188);
+	width: 16%;
+	padding: 3px 8px 3px 30px;
+	background: url('/harpur/sites/default/files/search.png') no-repeat 8px 3px; 
+        background-color: #FAFAFA;
+        border-radius: 6px;
+        margin-top: 4px;
+}
+#home-login { 
+        font-size: 18px; 
+        line-height: normal;
+}
+#search-form { width: 200px; text-align: right; margin-top: 4px; }
+#search-form input { width: 150px }
+.overlay
+{
+    position: absolute; 
+    top:0; 
+    left:0;
+    max-width: 100%
+}
+#parent
+{
+    position: relative; 
+    top:0; 
+    left:0;
+    max-width: 100%
+}
+#tick-left, #tick-right
+{
+    font: 18px bold sans-serif;
+}
+.clear { clear: both;}
+#switcher { float: right; }
+div.item-list { float: left;  }
+div.tooltip
+{
+    background-color: #FFFFCC;
+    width: auto;
+    height: 18px;
+    position: absolute;
+    padding: 5px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    font: 15px times,serif;
+    box-shadow: 4px 4px 4px #202020;
+}
+#left-home {float: left; margin-right:5px}
+#right-home {float: left}
+
+#logo { float: left; padding: 0 0px; width: 54% }
+/*quote-ticker overrides */
+#navigation { background-color: gainsboro }
+#navigation ul li { display: inline }
+#navigation ul li a { display: inline }
+#navigation ul { border: 0px; max-size: 100px; white-space: no-wrap }

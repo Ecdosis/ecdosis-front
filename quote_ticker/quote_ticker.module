@@ -1,0 +1,141 @@
+<?php
+/**
+ * @file
+ * A block module that displays a list of pull-quotes and their links.
+ */
+/**
+ * Implements hook_help.
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function quote_ticker_help($path, $arg) 
+{
+  switch ($path) 
+  {
+    case "admin/help#quote_ticker":
+      return '<p>' . t("Displays a list of pull-quotes and their links") . '</p>';
+      break;
+  }
+}
+/**
+ * Implements hook_block_info().
+ */
+function quote_ticker_block_info() 
+{
+  $blocks['quote_ticker'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Quote ticker'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+/**
+ * Generate the arrows
+ */
+function tick_arrows()
+{
+   return '<a id="tick-left" href="#">&lt;</a>&nbsp;<a id="tick-right" href="#">&gt;</a>';
+}
+/**
+ * Implements hook_block_view(). Produces the contents of the block.
+ * @param delta the name of the module
+ * @return a key-value array
+ */
+function quote_ticker_block_view($delta = '') 
+{
+  switch ($delta) 
+  {
+    case 'quote_ticker':
+      // Array to contain items for the block to render.
+      $items = array();
+      $n = variable_get('quote_ticker_numquotes');
+      for ( $i=1;$i<=$n;$i++ )
+      {
+          $items[$i-1] = '<span class="pullquote">'
+              .variable_get('quote_ticker_'.ordinal($i))
+              .'</span>';
+      }
+      // Pass data through theme function.
+      $block['content'] = theme('item_list', array(
+        'items' => $items)).'<div id="switcher">'
+        .tick_arrows().'</div><div class="clear"></div>';
+      return $block;
+  }
+  // else there is nothing to do
+}
+/**
+ * A utility function to convert an integer into an ordinal string
+ * e.g. 7->"7th", 33->"33rd"
+ * @param num an integer
+ * @return a string
+ */
+function ordinal($num) 
+{
+  if (!in_array(($num % 100),array(11,12,13))){
+    switch ($num % 10) {
+      // Handle 1st, 2nd, 3rd
+      case 1:  return $num.'st';
+      case 2:  return $num.'nd';
+      case 3:  return $num.'rd';
+    }
+  }
+  return $num.'th';
+}
+/**
+ * Implements hook_menu(). Needed for config screen.
+ */
+function quote_ticker_menu() {
+  $items = array();
+
+  $items['admin/config/content/quote_ticker'] = array(
+    'title' => 'Quote ticker',
+    'description' => 'Configuration for quote ticker module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('quote_ticker_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  return $items;
+}
+/**
+ * Page callback: Quote ticker settings
+ * @param form the form object to override
+ * @param form_state the current state of the form (keys->values)
+ * @return an updated form
+ * @see quote_ticker_menu()
+ */
+function quote_ticker_form($form, &$form_state) 
+{
+    $n = variable_get('quote_ticker_numquotes',6);
+    if ( $n > 32 )
+        $n = 32;
+    elseif ( $n < 1 )
+        $n = 1;
+    $form['quote_ticker_numquotes'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of quotes (1 to 32)'),
+        '#default_value' => $n,
+        '#size' => 2,
+        '#maxlength' => 2,
+        '#required' => TRUE
+    );
+    for ( $i=1;$i<=$n;$i++ )
+    {
+        $form['quote_ticker_'.ordinal($i)] = array(
+        '#type' => 'textfield',
+        '#title' => t('Quote '.$i),
+        '#default_value' => variable_get('quote_ticker_'.ordinal($i),ordinal($i).' quote <a href="">more...</a>'),
+        '#size' => 64,
+        '#maxlength' => 512,
+        '#required' => TRUE
+        );
+    }
+    return system_settings_form($form);
+}
+

@@ -1,0 +1,5 @@
+name = Home Page
+description = A page module that displays a graphical home page.
+core = 7.x
+configure = admin/config/content/homepage
+stylesheets[all][] = css/homepage.css

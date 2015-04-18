@@ -1,0 +1,48 @@
+div[class="bio"] pre {
+    white-space: pre;
+    line-height: normal;
+}
+div[class="references"] p {
+line-height: normal;
+font-size: small;
+margin-bottom: 0;
+}
+div[class="year"] h3 {
+margin-top: 20px;
+text-align: center;
+}
+div[class="bio"] p {
+    margin-bottom: 0;
+}
+div[class="bio"] p + p {
+    text-indent:2em; 
+}
+div[class="bio"] blockquote {
+    margin-left: 2em;
+}
+div[class="references"] {
+    color: grey;
+    margin-top: 20px;
+}
+div[class="references"] {
+    padding-top: 5px;
+    margin-top: 20px;
+    border-top: 1px solid grey;
+}
+html, body {
+    height:100%;
+    padding: 0px;
+    margin: 0px;
+}
+div.bio img {
+    max-width: 80%;
+    max-height: 400px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto; 
+    margin-top: 10px;
+    margin-bottom:10px;
+}
+#years {display:inline;margin-left:20px;line-height:18px}
+#timeline-toolbar {display:inline}
+#biography {padding-left:10%;padding-right:10%}

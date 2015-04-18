@@ -1,0 +1,23 @@
+.block-quote-ticker { 
+    display: inline;
+    border: 0; 
+    max-size: 100px; 
+    white-space: nowrap; 
+    overflow: hidden;
+    background: transparent; 
+    margin-bottom: 0px;
+    margin-top: 4px;
+    line-height: 1.5;
+    padding-top: 4px;
+    clear: both;
+}
+.item-list ul {
+    list-style: none;
+    line-height: 1.0;
+    padding-bottom: 4px !important;
+    padding-left: 0px !important;
+    margin: 0 !important;
+}
+#switcher {
+    padding-bottom: 4px;
+}

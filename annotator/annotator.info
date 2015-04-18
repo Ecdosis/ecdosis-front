@@ -1,0 +1,6 @@
+name = Annotator
+description = A block module that displays edits and deletes a textual or captioned image onto a text selection.
+core = 7.x
+configure = admin/config/content/annotator
+stylesheets[all][] = annotator.css
+scripts[] = annotator.js

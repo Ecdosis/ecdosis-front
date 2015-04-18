@@ -1,0 +1,4 @@
+name = MVD Single View
+description = Views a multi-version document in a single pane.
+core = 7.x
+configure = admin/config/content/mvdsingle

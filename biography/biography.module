@@ -1,0 +1,102 @@
+<?php
+function add_meta_tag( $name, $value, $tag )
+{
+    $element = array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+            'name'=> $name,
+            'content' => $value
+        )
+    );
+    drupal_add_html_head($element,$tag);            
+}
+function biography_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"biography")&&!strpos(request_uri(),"=biography") )
+    {
+        add_meta_tag('description','Ecdosis biography','Ecdosis biography');
+        drupal_add_js(drupal_get_path('module', 'biography').'/js/jquery.htmlClean.js','file');
+        drupal_add_css(drupal_get_path('module','biography').'/css/biography.css','file');
+    }
+}
+/**
+* @file
+* A block module to display an Ecdosis biography
+*/
+function biography_help($path, $arg) 
+{
+    switch ($path) 
+    {
+        case "admin/help#biography":
+            return '<p>' . 
+                t("Displays an author's biography in Ecdosis.") 
+                . '</p>';
+            break;
+    }
+}
+/**
+ * Implements hook_block_info().
+ */
+function biography_block_info() 
+{
+    $blocks['biography'] = array(
+        'info' => t('Ecdosis Biography Module'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    return $blocks;
+}
+/**
+ * Custom callback generates the biography year by year
+ * @return the html
+ */
+function biography_all()
+{
+    $mod_path = drupal_get_path('module', 'biography');
+    $html ='<script type="text/javascript" src="'.$mod_path
+        .'/js/biography.js?target=content&'
+        .'docid='.$_GET['docid']
+        .'&modpath='.$mod_path
+        .'"></script>';
+    return $html;
+}
+/**
+ * Implements hook_menu(). Needed for config screen.
+ */
+function biography_menu() {
+  $items = array();
+
+  $items['admin/config/content/biography'] = array(
+    'title' => 'Biography',
+    'description' => 'Configuration for biography module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('biography_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  $items['biography'] = array(
+    'title' => "Biography",
+    'page callback' => 'biography_all',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  return $items;
+}
+/**
+ * Page callback: Biography settings
+ * @param form the form object to override
+ * @param form_state the current state of the form (keys->values)
+ * @return an updated form
+ * @see quote_ticker_menu()
+ */
+function biography_form($form, &$form_state) 
+{
+    $form['biography_docid'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Harpur biography docid'),
+        '#default_value' => 'english/harpur',
+        '#size' => 128,
+        '#maxlength' => 256,
+        '#required' => TRUE
+    );
+    return $form;
+}

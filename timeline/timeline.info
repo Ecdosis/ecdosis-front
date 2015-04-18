@@ -1,0 +1,4 @@
+name = Timeline
+description = Interactive timeline
+core = 7.x
+configure = admin/config/content/timeline

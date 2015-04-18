@@ -1,0 +1,10 @@
+#navigation span.pullquote { 
+    display: inline;
+    border: 0; 
+    max-size: 100px; 
+    white-space: nowrap; 
+    overflow: hidden;
+    background: transparent; 
+}
+div.item-list li { background: transparent }
+div.item-list ul { background: transparent }

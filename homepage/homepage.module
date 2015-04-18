@@ -1,0 +1,117 @@
+<?php
+function homepage_preprocess_page()
+{
+    if ( request_uri()=="/harpur/" )
+    {
+        drupal_add_js(drupal_get_path('module','homepage').'/js/jquery.cycle.all.js', 'file');
+        drupal_add_js(drupal_get_path('module','homepage').'/js/homepage.js','file');
+    }
+}
+/**
+ * @file
+ * A block module that displays a home page as an image.
+ */
+/**
+ * Implements hook_help.
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function homepage_help($path, $arg) 
+{
+  switch ($path) 
+  {
+    case "admin/help#homepage":
+      return '<p>' . t("Displays an interactive home page") . '</p>';
+      break;
+  }
+}
+/**
+ * Implements hook_block_info().
+ */
+function homepage_block_info() 
+{
+  $blocks['homepage'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Home page'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function attribute($key,$value)
+{
+    return ' '.$key.'="'.$value.'"';
+}
+/**
+ * Read a JSON config file and return it as a Php object
+ * @param $path the path to the json config file
+ * @return a php object
+ */
+function read_config( $path )
+{
+    $json = file_get_contents($path);
+    return json_decode($json);
+}
+/**
+ * Generate a div containing an arbitrary number of images
+ * @param $path the path to the image directory to scan
+ * @param $id the id of the div
+ */
+function get_panel( $path, $id )
+{
+    $config = read_config($path."/config.json");
+    $html = '<div id="'.$id.'">';
+    $html .= "\n";
+    $files = scandir( $path );
+    foreach ( $files as &$img )
+    {
+        if ( $img != "config.json" && $img != "." && $img != ".." )
+        {
+            $html .= '    <img src="'.$path.'/'.$img.'"';
+            if ( array_key_exists($img,$config) )
+            {
+                if ( array_key_exists('title',$config->{$img}) )
+                {
+                    $title = $config->{$img}->title;
+                    $html .= ' title="'.$title.'"';
+                }
+                if ( array_key_exists('width',$config->{$img}) )
+                {
+                    $width = $config->{$img}->width;
+                    $html .= ' width="'.$width.'"';
+                }
+                if ( array_key_exists('height',$config->{$img}) )
+                {
+                    $height = $config->{$img}->height;
+                    $html .= ' height="'.$height.'"';
+                }
+            }
+            $html .= ">\n";
+        }
+    }
+    $html .= "</div>\n";
+    return $html;
+}
+/**
+ * Implements hook_block_view(). Produces the contents of the block.
+ * @param delta the name of the module
+ * @return a key-value array
+ */
+function homepage_block_view($delta = '') 
+{
+  switch ($delta) 
+  {
+    case 'homepage':
+      $mpath = drupal_get_path('module', 'homepage');
+      $html = get_panel($mpath."/images/left","left-home");
+      $html .= get_panel($mpath."/images/right","right-home");
+      $block['content'] = $html;
+      return $block;
+  }
+  // else there is nothing to do
+}

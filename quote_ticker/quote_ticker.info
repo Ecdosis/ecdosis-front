@@ -1,0 +1,7 @@
+name = Quote Ticker
+description = A block module that displays a list of pull-quotes.
+core = 7.x
+configure = admin/config/content/quote_ticker
+stylesheets[all][] = css/quote_ticker.css
+scripts[] = js/quote_ticker.js
+

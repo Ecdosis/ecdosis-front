@@ -1,0 +1,139 @@
+<?php
+function browse_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"browse") )
+    {
+        add_meta_tag('description','AustESE browse pages','austese browse');
+        add_meta_tag("apple-mobile-web-app-capable","yes",'mobile-web-app-console');
+        add_meta_tag("apple-touch-fullscreen","yes",'apple-touch-fullscreen');
+        add_meta_tag("viewport","width=device-width, initial-scale=1.0, maximum-scale=1.0",'viewport');
+        drupal_add_js('http://code.jquery.com/ui/1.10.4/jquery-ui.js', 'external');
+        drupal_add_js(drupal_get_path('module', 'browse').'/js/browse.js','file');
+        drupal_add_css(drupal_get_path('module','browse').'/css/browse.css','file');
+        drupal_add_css('http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css','external');
+    }
+}
+/**
+* @file
+* A block module to display a set of browse index pages
+*/
+function browse_help($path, $arg) 
+{
+    switch ($path) 
+    {
+        case "admin/help#browse":
+            return '<p>' . 
+                t("Displays a set of browse index pages.") 
+                . '</p>';
+            break;
+  }
+}
+/**
+ * Implements hook_block_info().
+ */
+function browse_block_info() 
+{
+    $blocks['browse'] = array(
+        'info' => t('AustESE Browse Module'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    return $blocks;
+}
+/**
+ * Custom callback generates the browse content
+ * @return the html
+ */
+function browse_all()
+{
+    $html="<div id=\"tabs\">\n<ul>";
+    $ntabs = variable_get('browse_numpages',1);
+    for ( $i=1;$i<=$ntabs;$i++ )
+    {
+        $title_key = "browse_title_".ordinal($i);
+        $tab_title = variable_get($title_key,"tab".$i);
+        $tab_id = str_replace(" ", "_", $tab_title);
+        $html .= '<li><a href="#'.$tab_id.'">'.$tab_title.'</a></li>';
+    }
+    $html .= "</ul>\n";
+    for ( $i=1;$i<=$ntabs;$i++ )
+    {
+        $title_key = "browse_title_".ordinal($i);
+        $tt = variable_get($title_key,"tab".$i);
+        $tid = str_replace(" ", "_", $tt);
+        $html .= '<div id="'.$tid.'" title="';
+        $url_key = "browse_url_".ordinal($i);
+        $tab_url = variable_get($url_key,"#");
+        $html .= $tab_url;
+        $html .= '"></div>';
+        $html .= '<div style="clear: both"></div>';
+    }
+    /* end of tabs div */
+    $html .= '</div>';
+    return $html;
+}
+/**
+ * Implements hook_menu(). Needed for config screen.
+ */
+function browse_menu() {
+  $items = array();
+
+  $items['admin/config/content/browse'] = array(
+    'title' => 'Browse',
+    'description' => 'Configuration for browse module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('browse_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  $items['browse'] = array(
+    'title' => "Browse",
+    'page callback' => 'browse_all',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  return $items;
+}
+/**
+ * Page callback: Browse settings
+ * @param form the form object to override
+ * @param form_state the current state of the form (keys->values)
+ * @return an updated form
+ * @see browse_menu()
+ */
+function browse_form($form, &$form_state)
+{
+    $n = variable_get('browse_numpages',3);
+    if ( $n > 6 )
+        $n = 6;
+    elseif ( $n < 1 )
+        $n = 1;
+    $form['browse_numpages'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of index pages (1 to 6)'),
+        '#default_value' => $n,
+        '#size' => 2,
+        '#maxlength' => 2,
+        '#required' => TRUE
+    );
+    for ( $i=1;$i<=$n;$i++ )
+    {
+        $form['browse_title_'.ordinal($i)] = array(
+        '#type' => 'textfield',
+        '#title' => t('Title'),
+        '#default_value' => variable_get('browse_title_'.ordinal($i),'Index '.$i),
+        '#size' => 64,
+        '#maxlength' => 64,
+        '#required' => TRUE
+        );
+        $form['browse_url_'.ordinal($i)] = array(
+        '#type' => 'textfield',
+        '#title' => t('Url'),
+        '#default_value' => variable_get('browse_url_'.ordinal($i),'Url '.$i),
+        '#size' => 76,
+        '#maxlength' => 128,
+        '#required' =>TRUE
+        );
+    }
+    return system_settings_form($form);
+}
+

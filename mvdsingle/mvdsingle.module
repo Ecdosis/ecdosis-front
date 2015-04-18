@@ -1,0 +1,125 @@
+<?php
+/**
+ * @file
+ * A block module that displays a home page as an image.
+ */
+function mvdsingle_preprocess_page()
+{
+    if ( strpos(request_uri(),"mvdsingle") )
+    {
+        drupal_add_js(drupal_get_path('module','mvdsingle').'/js/rangy-core.js', 'file');
+        drupal_add_js(drupal_get_path('module','mvdsingle').'/js/setselection.js', 'file');
+        drupal_add_js(drupal_get_path('module','mvdsingle').'/js/mvdsingle.js', 'file');
+        drupal_add_css(drupal_get_path('module','mvdsingle').'/css/mvdsingle.css','file');
+    }
+}
+/**
+ * Implements hook_help.
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function mvdsingle_help($path, $arg) 
+{
+  switch ($path) 
+  {
+    case "admin/help#mvdsingle":
+      return '<p>' . t("Displays an MVD one version at a time") . '</p>';
+      break;
+  }
+}
+/**
+ * Implements hook_block_info().
+ */
+function mvdsingle_block_info() 
+{
+  $blocks['mvdsingle'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Single MVD viewer'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+/**
+ * Implements hook_block_view(). Produces the contents of the block.
+ * @param delta the name of the module
+ * @return a key-value array
+function mvdsingle_block_view($delta = '') 
+{
+    switch ($delta) 
+    {
+        case 'mvdsingle':
+            $block['content'] = $html;
+            return $block;
+    }
+    // else there is nothing to do
+}
+ */
+/**
+ * Custom callback generates the generated mvd single view
+ * @return the html
+ */
+function mvdsingle_all()
+{
+    $docid = (isset($_GET['DOC_ID']))?$_GET['DOC_ID']:"english/shakespeare/kinglear/act1/scene1";
+    $version1 = (isset($_GET['version1']))?$_GET['version1']:"";
+    $selection = (isset($_GET['selection']))?$_GET['selection']:"";
+    $html = '<div id="list"></div>'."\n";
+    $html .= '<div id="body"></div>'."\n";
+    $html .= '<input type="hidden" id="DOC_ID" value="'.$docid.'"></input>'."\n";
+    if ( strlen($version1) > 0 )
+        $html .= '<input type="hidden" id="version1" value="'.$version1.'"></input>'."\n";
+    if ( strlen($selection) > 0 )
+        $html .= '<input type="hidden" id="selection" value="'.$selection.'"></input>'."\n";
+    $html .= '<input type="hidden" id="MVD_SERVICE" value="'
+        .variable_get('mvdsingle_service',"").'"></input>';
+    return $html;
+}
+/**
+ * Implements hook_menu(). Needed for config screen.
+ */
+function mvdsingle_menu() {
+  $items = array();
+
+  $items['admin/config/content/mvdsingle'] = array(
+    'title' => 'MVD Single View',
+    'description' => 'Configuration for mvdsingle module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mvdsingle_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  $items['mvdsingle'] = array(
+    'title' => "MVD Single View",
+    'page callback' => 'mvdsingle_all',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  return $items;
+}
+/**
+ * Page callback: Mvdsingle settings
+ * @param form the form object to override
+ * @param form_state the current state of the form (keys->values)
+ * @return an updated form
+ * @see mvdsingle_menu()
+ */
+function mvdsingle_form($form, &$form_state)
+{
+    $url = variable_get('mvdsingle_service',"");
+    $form['biography_docid'] = array(
+        '#type' => 'textfield',
+        '#title' => t('calliope service URL'),
+        '#default_value' => $url,
+        '#size' => 128,
+        '#maxlength' => 256,
+        '#required' => TRUE
+    );
+    return $form;
+}
+

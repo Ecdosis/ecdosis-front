@@ -1,0 +1,4 @@
+name = Browse
+description = Display a set of static web-page indices using tabs
+core = 7.x
+configure = admin/config/content/browse

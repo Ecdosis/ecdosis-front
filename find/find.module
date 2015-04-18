@@ -1,0 +1,52 @@
+<?php
+function find_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"find") )
+    {
+        drupal_add_css(drupal_get_path('module','find').'/find.css','file');
+        drupal_add_css(drupal_get_path('theme','ecdosis').'/css/font-awesome.min.css','file');
+    }
+}
+function find_all()
+{
+    $mod_path = drupal_get_path('module', 'find');
+    $html ='<script type="text/javascript" src="'.$mod_path
+          .'/find.js?target=content'.'"></script>';
+    return $html;
+}
+function find_menu()
+{
+    $items = array();
+    $items['admin/config/content/find'] = array(
+        'title'=>'Basic indexed search',
+        'description' => 'Find text in MVDs, metadata and annotations',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('find_form'),
+        'access arguments' => array('access administration pages'),
+        'type' => MENU_NORMAL_ITEM
+    );
+    $items['find'] = array(
+        'title' => 'Regenerate find',
+        'page callback' => 'find_all',
+        'access arguments' => array('access content'),
+        'type' => MENU_CALLBACK
+    );
+    return $items;
+}
+function find_block_info() {
+  $blocks['find'] = array(
+    'info' => t('Find text'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function find_help($path, $arg) {
+}
+function find_block_view($delta = '') {
+  switch ($delta) {
+    case 'find':
+      $block['subject'] = t('Find');
+      $block['content'] = '<script type="text/javascript" src="'.drupal_get_path('module', 'find').'/find.js?target=content'.'"></script>';
+      return $block;
+  }
+}
