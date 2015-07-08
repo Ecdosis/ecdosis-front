@@ -53,53 +53,6 @@ function biography(target,docid,modpath) {
         return html;
     }
     /**
-     * Compare two dates
-     * @param d1 the first date {year:NNNN,day:NN,month:NN}
-     * @param d2 the second date
-     * @return 1 if d1>d2, -1 if d2>d1 else 0
-     */
-    this.compareDate = function( d1, d2 ) {
-        if ( d1.year > d2.year )
-            return 1;
-        else if ( d2.year > d2.year )
-            return -1;
-        else if ( d1.month > d2.month )
-            return 1;
-        else if ( d2.month > d1.month )
-            return -1;
-        else if ( d1.day > d2.day )
-            return 1;
-        else if ( d2.day > d1.day )
-            return -1;
-        else
-            return 0;
-    };
-    /**
-     * Sort an array of date objects
-     * @param arr array to sort
-     */
-    this.sortEvents = function( arr )
-    {
-        var incs = new Array( 1391376, 463792, 198768, 86961, 33936,
-            13776, 4592, 1968, 861, 336,
-            112, 48, 21, 7, 3, 1 );
-        for ( var k=0; k<16; k++)
-        {
-            var i,lim = arr.length-1;
-            for ( var h=incs[k],i=h;i<=lim;i++ )
-            {
-                v = arr[i];
-                var j = i;
-                while (j >= h && this.compareDate(arr[j-h].date,v.date)>0 )
-                {
-                    arr[j] = arr[j-h];
-                    j -= h;
-                }
-                arr[j] = v;
-            }
-        }
-    }
-    /**
      * Synchronous get of events
      * @param theUrl the url to get events from
      * @return the JSON response text
@@ -120,7 +73,6 @@ function biography(target,docid,modpath) {
     {
         var jsonObject = this.parseJSON(dataObject);
         var events = jsonObject.biography;
-        this.sortEvents( events );
         var prev_year = 0;
         var curr_year = 0;
         var body = "";                      

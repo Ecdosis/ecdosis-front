@@ -1,9 +1,14 @@
 <?php
 
-/*function annotator_preprocess_page()
+function annotator_preprocess_page(&$vars)
 {
-    drupal_add_css('http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css','external');
-}*/
+    if ( strpos(request_uri(),"annotator") )
+    {
+        drupal_add_css(drupal_get_path('module','annotator').'/annotator.css','file');
+        drupal_add_js(drupal_get_path('module','annotatot').'/annotator.js','file');
+        drupal_add_css(drupal_get_path('theme','ecdosis').'/css/font-awesome.min.css','file');
+    }
+}
 /**
 * @file
 * A block module that displays three buttons: delete, text and image 

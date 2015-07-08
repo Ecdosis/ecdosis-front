@@ -1,0 +1,5 @@
+name = Works
+description = Display a list of works and versions of works
+core = 7.x
+configure = admin/config/content/works
+

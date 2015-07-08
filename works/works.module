@@ -1,0 +1,52 @@
+<?php
+function works_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"works") )
+    {
+        drupal_add_css(drupal_get_path('module','works').'/works.css','file');
+        drupal_add_css(drupal_get_path('theme','ecdosis').'/css/font-awesome.min.css','file');
+    }
+}
+function works_all()
+{
+    $mod_path = drupal_get_path('module', 'works');
+    $html ='<script type="text/javascript" src="'.$mod_path
+          .'/works.js?target=content&title=Poetical%20Works'.'"></script>';
+    return $html;
+}
+function works_menu()
+{
+    $items = array();
+    $items['admin/config/content/works'] = array(
+        'title'=>'Display a list of works',
+        'description' => 'List works and their versions',
+        'page callback' => 'drupal_get_works',
+        'page arguments' => array('works_form'),
+        'access arguments' => array('access administration pages'),
+        'type' => MENU_NORMAL_ITEM
+    );
+    $items['works'] = array(
+        'title' => 'Works table',
+        'page callback' => 'works_all',
+        'access arguments' => array('access content'),
+        'type' => MENU_CALLBACK
+    );
+    return $items;
+}
+function works_block_info() {
+  $blocks['works'] = array(
+    'info' => t('Display works'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function works_help($path, $arg) {
+}
+function works_block_view($delta = '') {
+  switch ($delta) {
+    case 'works':
+      $block['subject'] = t('Works');
+      $block['content'] = '<script type="text/javascript" src="'.drupal_get_path('module', 'works').'/works.js?target=content&title=Poetical%20Works'.'"></script>';
+      return $block;
+  }
+}

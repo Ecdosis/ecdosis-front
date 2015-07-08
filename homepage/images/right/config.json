@@ -1,39 +1,9 @@
 {
-    "euroma-cropped.jpg":
-    {
-        "title": "Charles Harpur's home at Eurobodalla",
-        "width":652,
-        "height":546
-    },
     "powder-flask.jpg":
     {
         "title":"Charles Harpur’s powder flask for drying ink and ivory-handled stamp for heating wax in the sealing of letters (Mitchell Library, SLNSW)",
         "width":652,
         "height":546
-    },
-    "smsa.jpg":
-    {
-        "title":"Sydney Mechanics School of Arts circa 1925",
-        "width":652,
-        "height":546
-    },
-    "wild-bee.jpg":
-    {
-        "title":"Charles Harpur's Wild Bee of Australia",
-        "width":652,
-        "height":546
-    },
-    "windsor-inn.jpg":
-    {
-        "title":"Windsor inn circa 1825",
-        "width":652,
-        "height":546
-    },
-    "maitland.jpg":
-    {
-        "title":"A flooded street in West Maitland, NSW, 1857-1872 with buildings on either side, including the Municipal Council Chambers. State Library of Victoria",
-        "width":652,
-        "height":546
-    }        
+    }
 }
 

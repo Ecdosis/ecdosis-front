@@ -1,0 +1,7 @@
+#versions td { padding-top:0px; padding-bottom:0px;}
+th.sorted { color: red }
+td .fa {color: #2883DE}
+.initial,.sorted,.unsorted:hover {cursor:pointer}
+.tabletitle {margin-top:10px;text-align:center}
+.celltitle {margin-left:20px}
+.leastyear {text-align:center}
