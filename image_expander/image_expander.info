@@ -1,0 +1,7 @@
+name = Image expander
+description = expand or collapse expanded images
+core = 7.x
+configure = admin/config/content/image_expander
+stylesheets[all][] = image_expander.css
+scripts[] = image_expander.js
+
