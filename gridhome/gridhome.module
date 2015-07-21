@@ -1,0 +1,47 @@
+<?php
+function gridhome_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"home") )
+    {
+        drupal_add_css(drupal_get_path('module','gridhome').'/gridhome.css','file');
+    }
+}
+function gridhome_all()
+{
+    $mod_path = drupal_get_path('module', 'gridhome');
+    $html ='<script type="text/javascript" src="'.$mod_path
+          .'/gridhome.js?target=content&modpath='.$mod_path.
+          '&dbname=drupaldb&nid=30"></script>';
+    return $html;
+}
+function gridhome_menu()
+{
+    $items = array();
+    $items['gridhome'] = array(
+        'title' => 'Grid layout for homepage',
+        'page callback' => 'gridhome_all',
+        'access arguments' => array('access content'),
+        'type' => MENU_CALLBACK
+    );
+    return $items;
+}
+function gridhome_block_info() {
+  $blocks['gridhome'] = array(
+    'info' => t('Display a homepage in a grid'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function gridhome_help($path, $arg) {
+}
+function gridhome_block_view($delta = '') {
+  switch ($delta) {
+    case 'works':
+      $mod_path = drupal_get_path('module', 'gridhome');
+      $block['subject'] = t('Grid homepage');
+      $block['content'] = '<script type="text/javascript" src="'
+          .$mod_path.'/gridhome.js?target=content&modpath='.$mod_path.
+          '&dbname=drupaldb&nid=30"></script>';
+      return $block;
+  }
+}

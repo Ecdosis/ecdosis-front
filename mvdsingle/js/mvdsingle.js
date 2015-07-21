@@ -41,7 +41,7 @@ function getSelectedOption( responseText )
     return opt;
 }
 $(function(e){
-    var docID = getValById("#DOC_ID","english/shakespeare/kinglear/act1/scene1");
+    var docID = getValById("#docid","english/shakespeare/kinglear/act1/scene1");
     var version1 = getValById("#version1","");
     var selection = getValById("#selection","");
     var service = getValById("#MVD_SERVICE","http://localhost");

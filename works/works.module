@@ -9,9 +9,11 @@ function works_preprocess_page(&$vars)
 }
 function works_all()
 {
+    $projid = (array_key_exists("projid",$_GET))?$_GET['projid']:"english/harpur";
     $mod_path = drupal_get_path('module', 'works');
     $html ='<script type="text/javascript" src="'.$mod_path
-          .'/works.js?target=content&title=Poetical%20Works'.'"></script>';
+          .'/works.js?target=content&title=Poetical%20Works&projid='
+          .$projid.'"></script>';
     return $html;
 }
 function works_menu()
@@ -46,7 +48,10 @@ function works_block_view($delta = '') {
   switch ($delta) {
     case 'works':
       $block['subject'] = t('Works');
-      $block['content'] = '<script type="text/javascript" src="'.drupal_get_path('module', 'works').'/works.js?target=content&title=Poetical%20Works'.'"></script>';
+      $block['content'] = '<script type="text/javascript" src="'
+          .drupal_get_path('module', 'works')
+          .'/works.js?target=content&title=Poetical%20Works&projid='
+          .$_GET['projid'].'"></script>';
       return $block;
   }
 }

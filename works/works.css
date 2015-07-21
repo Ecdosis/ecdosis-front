@@ -1,7 +1,62 @@
 #versions td { padding-top:0px; padding-bottom:0px;}
-th.sorted { color: red }
+th.sorted { color: #2883DE }
 td .fa {color: #2883DE}
 .initial,.sorted,.unsorted:hover {cursor:pointer}
 .tabletitle {margin-top:10px;text-align:center}
 .celltitle {margin-left:20px}
 .leastyear {text-align:center}
+.version_title::before {
+    content: "title: ";
+    font-style: italic;
+} 
+.version_firstline::before {
+    content: "first line: “";
+    font-style: italic;
+} 
+.version_firstline::after {
+    content: "”";
+    font-style: italic;
+}
+.version_year::before {
+    content: "year: ";
+    font-style: italic;
+} 
+.version_date::before {
+    content: "date: ";
+    font-style: italic;
+} 
+.version_source::before {
+    content: "source: ";
+    font-style: italic;
+} 
+.version_page::before {
+    content: "page: ";
+    font-style: italic;
+} 
+.version_notes::before {
+    content: "notes: ";
+    font-style: italic;
+} 
+.version_series::before {
+    content: "series: ";
+    font-style: italic;
+} 
+.version_ms::before {
+    content: "ms: ";
+    font-style: italic;
+} 
+.version_format::before {
+    content: "format: ";
+    font-style: italic;
+} 
+#versions li {
+    list-style-type: none;
+    padding-left: 4em;
+    text-indent: -3em;
+    padding-top:2px;
+    padding-bottom:2px;
+}
+#versions ul {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}

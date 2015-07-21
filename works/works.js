@@ -1,14 +1,17 @@
 /**
  * Simple GUI to find things in an index
  * @param target the id of the target eleemnt on the page
+ * @param title the table title
+ * @param projid the id of the project
  */
-function works(target,title)
+function works(target,title,projid)
 {
     this.target = target;
     this.tableTitle = title;
     this.sortStates = ["ascending","unsorted","unsorted"];
     this.cellTitles = ["Id","Title","First Year"];
     this.cellIds = ["hnumber","normtitle","firstyear"];
+    this.projid = projid;
     var self = this;
     this.set_html = function( html )
     {
@@ -142,6 +145,36 @@ function works(target,title)
         this.rebuild();
     };
     /**
+     * Decide whether to separate two entries in a version description
+     * @param entry teh current entry to be appended to
+     * @param new_text the new text to add
+     * @return the old and new text duly separated
+     */
+    this.sep = function( entry, new_text ) {
+        if ( entry.charAt(entry.length-1)==' ' )
+            return entry+new_text;
+        else
+            return entry+"; "+new_text;
+    };
+    /**
+     * Make the url of a link to a document version
+     * @param workid the id of the work
+     * @param versionid the id of the particular version
+     * @return the full url to access it
+     */
+    this.makeUrl = function( workid, versionid ) {
+        var firstPath = window.location.pathname;
+        var parts = firstPath.split("/");
+        for ( var i=0;i<parts.length;i++ )
+            if ( parts[i].length > 0 )
+            {
+                firstPath = parts[i];
+                break;
+            }
+        return "http://"+window.location.host+"/"+firstPath+"/mvdsingle?docid="
+            +this.projid+'/'+workid+"/"+versionid;
+    };
+    /**
      * Rebuild the works table using the existing downloaded data, perhaps resorted
      */
     this.rebuild = function() {
@@ -153,14 +186,16 @@ function works(target,title)
         main.prepend('<h3 class="tabletitle">'+this.tableTitle+'</h3>');
         var table = jQuery("#versions");
         table.append(this.makeHeader());
+        this.lookupTable = {};
         for ( var i=0;i<this.jsonTable.length;i++ )
         {
-            this.jsonTable[i].leastYear = self.getLeastYear(this.jsonTable[i]);
+            this.jsonTable[i].leastYear = this.getLeastYear(this.jsonTable[i]);
             var row = '<tr><td class="initial" title="show versions">';
             row += '<i class="fa fa-plus"></i></td>';
             row += '<td>'+this.jsonTable[i].id+'</td>';
             row += '<td>'+this.jsonTable[i].title+'</td>';
             row += '<td class="leastyear">'+this.jsonTable[i].leastYear+'</td>';
+            this.lookupTable[this.jsonTable[i].id]=this.jsonTable[i];
             table.append(row);
         }
         jQuery("#hnumber").click(function() {
@@ -171,6 +206,64 @@ function works(target,title)
         });
         jQuery("#firstyear").click(function() {
             self.toggleState(2,"leastYear");
+        });
+        jQuery(".initial").click(function(e){
+            var cell = e.target;
+            var iSpan;
+            if ( e.target.tagName == 'I' )
+            {
+                 iSpan = jQuery(cell);
+                 cell = cell.parentNode;
+            }
+            else 
+                iSpan = jQuery(cell).children().first();
+            var row = cell.parentNode;
+            if ( iSpan.attr("class") == "fa fa-plus" )
+            {
+                iSpan.attr("class","fa fa-minus");
+                jQuery(row).after('<tr><td colspan="4"></td></tr>');
+                var newRow = jQuery(row).next();
+                var newCell = newRow.children().first();
+                var cells = jQuery(row).children();
+                var idCell = cells.eq(1);
+                var versions = self.lookupTable[idCell.text()].versions;
+                newCell.prepend("<ul></ul>");
+                var list = newCell.children("ul");
+                for ( var i=0;i<versions.length;i++ )
+                {
+                    var v = versions[i];
+                    var entry = '<li>';
+                    entry += '<a href="'+self.makeUrl(idCell.text(),v['version-id'])+'">'+v['version-id']+'</a>: ';
+                    if ( v['version-title'] != undefined )
+                        entry += '<span class="version_title">'+v['version-title']+"</span>";
+                    if ( v['first-line'] != undefined )
+                        entry = self.sep(entry, '<span class="version_firstline">'+v['first-line']+"</span>");
+                    if ( v['year'] != undefined )
+                        entry = self.sep(entry, '<span class="version_year">'+v['year']+"</span>");
+                    if ( v['date'] != undefined )
+                        entry = self.sep(entry, '<span class="version_date">'+v['date']+"</span>");
+                    if ( v['source'] != undefined )
+                        entry = self.sep(entry, '<span class="version_source">'+v['source']+"</span>");
+                    if ( v['page'] != undefined )
+                        entry = self.sep(entry, '<span class="version_page">'+v['page']+"</span>");
+                    if ( v['notes'] != undefined )
+                        entry = self.sep(entry, '<span class="version_notes">'+v['notes']+"</span>");
+                    if ( v['series'] != undefined )
+                        entry = self.sep(entry, '<span class="version_series">'+v['series']+"</span>");
+                    if ( v['ms'] != undefined )
+                        entry = self.sep(entry,'<span class="version_ms">'+v['ms']+"</span>");
+                    if ( v['format'] != undefined )
+                        entry = self.sep(entry,'<span class="version_format">'+v['format']+"</span>");
+                    entry += "</li>";
+                    list.append(entry);
+                }
+            }
+            else
+            {
+                iSpan.attr("class","fa fa-plus");
+                var newRow = jQuery(row).next();
+                newRow.remove();
+            }
         });
     };
     var url = "http://"+window.location.hostname+"/project/works";
@@ -217,5 +310,6 @@ function get_args( scrName )
  */
 jQuery(document).ready( function() { 
     var params = get_args('works');
-    new works(params['target'],params['title']);
+    var projid = (params['projid']==undefined)?"english/harpur":params['projid'];
+    new works(params['target'],params['title'],projid);
 }); 

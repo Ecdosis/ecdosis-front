@@ -66,12 +66,12 @@ function mvdsingle_block_view($delta = '')
  */
 function mvdsingle_all()
 {
-    $docid = (isset($_GET['DOC_ID']))?$_GET['DOC_ID']:"english/shakespeare/kinglear/act1/scene1";
+    $docid = (isset($_GET['docid']))?$_GET['docid']:"english/shakespeare/kinglear/act1/scene1";
     $version1 = (isset($_GET['version1']))?$_GET['version1']:"";
     $selection = (isset($_GET['selection']))?$_GET['selection']:"";
     $html = '<div id="list"></div>'."\n";
     $html .= '<div id="body"></div>'."\n";
-    $html .= '<input type="hidden" id="DOC_ID" value="'.$docid.'"></input>'."\n";
+    $html .= '<input type="hidden" id="docid" value="'.$docid.'"></input>'."\n";
     if ( strlen($version1) > 0 )
         $html .= '<input type="hidden" id="version1" value="'.$version1.'"></input>'."\n";
     if ( strlen($selection) > 0 )

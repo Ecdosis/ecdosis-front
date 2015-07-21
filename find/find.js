@@ -26,7 +26,7 @@ function find(target)
     this.make_hit = function( hit ) {
         var html = '<div class="hit">';
         var cms_path = this.get_cms_path();
-        html += '<a href="'+cms_path+'/mvdsingle?DOC_ID='+hit.docid;
+        html += '<a href="'+cms_path+'/mvdsingle?docid='+hit.docid;
         if ( hit.vids != undefined && hit.vids.length>0 )
             html += '&version1='+hit.vids[0];
         html += '">'+hit.title+'</a> ';

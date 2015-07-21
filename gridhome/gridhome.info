@@ -1,0 +1,4 @@
+name = Gridhome
+description = Display a homepage as a grid
+core = 7.x
+configure = admin/config/content/gridhome
