@@ -4,7 +4,7 @@ td .fa {color: #2883DE}
 .initial,.sorted,.unsorted:hover {cursor:pointer}
 .tabletitle {margin-top:10px;text-align:center}
 .celltitle {margin-left:20px}
-.leastyear {text-align:center}
+.leastyear {text-align:right;padding-right:2em}
 .version_title::before {
     content: "title: ";
     font-style: italic;

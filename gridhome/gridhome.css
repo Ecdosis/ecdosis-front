@@ -13,6 +13,11 @@
     display: table;
 }
 
+.gridhome-column p {
+    margin-bottom: 20px;
+    text-indent: 0px;
+}
+
 .gridhome-row:after {
     clear: both;
 }

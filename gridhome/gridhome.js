@@ -1,15 +1,17 @@
 function gridhome(target,modpath,dbname,nid)
 {
+   var self = this;
+   this.loadBody = function() {
+        var url = modpath+'/get_node_body.php?dbname='+dbname+'&nid='+nid;
+        jQuery.get(url, function(data) {
+            var jArray = JSON.parse(data);
+            jQuery("#gridhome_body").append(jArray[0].body_value);
+        });
+    };
     var url = modpath+'/template.html';
     jQuery.get(url, function(data) {
         jQuery('#'+target).append(data);
-    });
-    url = modpath+'/get_node_body.php?dbname='+dbname+'&nid='+nid;
-    jQuery.get(url, function(data) {
-        var jArray = JSON.parse(data);
-        jQuery("#gridhome_body").append(jArray[0].body_value);
-        var links = jQuery(".gridhome-column ul").detach();
-        jQuery("#gridhome_links").prepend(links);
+        self.loadBody();
     });
 }
 /**

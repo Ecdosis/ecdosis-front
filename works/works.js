@@ -33,14 +33,29 @@ function works(target,title,projid)
      */
     this.getLeastYear = function( work ) {
         var year = 1000000;
+        var tempCirca = false;
+        var wasCirca = false;
         for ( var i=0;i<work.versions.length;i++ )
         {
-            if ( work.versions[i].year != undefined 
-                && parseInt(work.versions[i].year)<year )
-                year = parseInt(work.versions[i].year);
+            var tempYear = work.versions[i].year;
+            if ( tempYear != undefined )
+            {
+                if ( tempYear.indexOf("c.")==0 )
+                {
+                    tempCirca = true;
+                    tempYear = tempYear.substring(2);
+                }
+                if ( parseInt(tempYear)<year )
+                {
+                    wasCirca = (tempCirca)?true:false;
+                    year = parseInt(tempYear);
+                }
+            }
         }
         if ( year == 1000000 )
             return 0;
+        else if ( wasCirca )
+            return "c."+year;
         else
             return year;
     };
@@ -99,10 +114,19 @@ function works(target,title,projid)
      * @return true if a < b and ascending else true if a > b
      */
     this.compareField = function( a, b, field, ascending ) {
+        var aField = a[field];
+        var bField = b[field];
+        if ( field == "leastYear" )
+        {
+            if ( typeof aField=="string" && aField.indexOf("c.")==0 )
+                aField = parseInt(aField.substring(2));
+            if ( typeof bField=="string" &&  bField.indexOf("c.")==0 )
+                bField = parseInt(bField.substring(2));
+        }
         if ( ascending )
-            return a[field] < b[field];
+            return aField < bField;
         else
-            return a[field] > b[field];
+            return aField > bField;
     };
     /**
      * Sort the jsonTable by the named field
