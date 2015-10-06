@@ -1,0 +1,26 @@
+#main {display:none}
+#ms-tools {position: absolute; right: 0}
+#ms-fullscreen {opacity:0.15}
+#ms-fullscreen:hover {opacity:0.4;cursor:pointer}
+#ms-title { margin-top:10px; margin-bottom:10px;font-weight:bold;text-align:center;font-size:1.2em}
+#ms-wrapper { vertical-align:middle;display:inline-block;}
+#ms-main {text-align:center;position:relative;background-color:transparent}
+#ms-slider {position:relative;top:0;margin-bottom:.5em;margin-left:auto;margin-right:auto}
+#ms-left,#ms-right { display:table-cell;width:auto}
+#ms-left img, #ms-right img {display:block}
+#ms-left img {float:right}
+#ms-right img {float: left}
+#ms-centre { display: none; }
+#ms-left-nav, #ms-right-nav {display:inline-block}
+#go-right,#go-left { vertical-align:middle;opacity: 0.3;color:grey;display:inline-block }
+#ms-left-nav {position:absolute;top:50%;}
+#ms-right-nav {position:absolute;top:50%;}
+#left-sidebar {display:inline}
+#right-sidebar {display:inline}
+#right-sidebar :hover {opacity:0.6;cursor:pointer}
+#left-sidebar :hover {opacity:0.6;cursor:pointer}
+#ms-page-left,#ms-page-right { position: relative; top:0}
+#ms-centre,#ms-left,#ms-right:hover {cursor:zoom-in; cursor: -webkit-zoom-in}
+#ms-magnify-zone {position:fixed;visibility:hidden;}
+.pageref:hover {cursor:pointer}
+.pageref {color:blue}

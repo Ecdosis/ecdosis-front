@@ -15,21 +15,32 @@ function timeline_preprocess_page(&$vars)
     if ( strpos(request_uri(),"timeline") )
     {
         my_add_meta_tag('description','Timeline','Timeline');
-        drupal_add_js(drupal_get_path('module','timeline').'/js/storyjs-embed.js','file');
+        drupal_add_js(drupal_get_path('module','timeline').'/js/timeline.js','file');
+        drupal_add_js(drupal_get_path('module','timeline').'/js/timeline-embed.js','file');
         drupal_add_css(drupal_get_path('module','timeline').'/css/timeline.css','file');
         drupal_add_css(drupal_get_path('module','timeline').'/css/ecdosis-timeline.css','file');
+        drupal_add_css(drupal_get_path('module','timeline').'/css/fonts/font.default.css?v1','external');
     }
+}
+function language( $param )
+{
+    if ( $param === "" )
+        return "en";
+    else
+        return $param;
 }
 function timeline_all()
 {
     $mod_path = drupal_get_path('module', 'timeline');
-    $html ='<script type="text/javascript" src="'.$mod_path
-        .'/js/ecdosis-timeline.js?target=content&'
+    $html = '<div id="timeline-embed"></div>'
+	.'<script type="text/javascript" src="'.$mod_path
+        .'/js/ecdosis-timeline.js?target=timeline-embed&'
         .'docid='.$_GET['docid']
         .'&modpath='.$mod_path
         .'&title='.$_GET['title']
         .'&subtitle='.$_GET['subtitle']
         .'&event_type='.$_GET['event_type']
+        .'&language='.language($_GET['language'])
         .'"></script>';
     return $html;
 }

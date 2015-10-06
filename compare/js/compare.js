@@ -29,18 +29,18 @@ function comparer( target, docid, modpath )
         {    
             if ( data != undefined && data.length > 0 )
             {
-                $("#"+parentId).prepend( data );
+                jQuery("#"+parentId).prepend( data );
                 // replace popup description with selected version name
                 id = longNameId.substr("long_name".length,longNameId.length);
-                var desc = $("#long_name"+id);
-	            desc.text($("#version"+id+" :selected").attr("title"));
-                $("#version"+id).change( function(){
+                var desc = jQuery("#long_name"+id);
+	            desc.text(jQuery("#version"+id+" :selected").attr("title"));
+                jQuery("#version"+id).change( function(){
                     // reload the versions
                     var id = "#version"+id;
                     if ( id == "#version1" )
-                        self.version1 = $("#version1").val();
+                        self.version1 = jQuery("#version1").val();
                     else
-                        self.version2 = $("#version2").val();
+                        self.version2 = jQuery("#version2").val();
                     // set content for left hand side
                     self.getTextVersion(self.version1,
                         self.version2,"deleted","leftColumn");
@@ -71,7 +71,7 @@ function comparer( target, docid, modpath )
         {    
             if ( data != undefined && data.length > 0 )
             {
-                $("#"+parentId).prepend(self.extractCSSFromBody(data) );
+                jQuery("#"+parentId).prepend(self.extractCSSFromBody(data) );
                 if ( parentId == "rightColumn" )
                 {
                     self.fitWithinParent("leftColumn");
@@ -120,7 +120,7 @@ function comparer( target, docid, modpath )
      * Get the first version of the cortex
      */
     this.getVersion1 = function() {
-        $.get( "/compare/version1?docid="+docid, 
+        jQuery.get( "/compare/version1?docid="+docid, 
             function( data ) {
                 self.version1 = data;
                 self.getDocTitle();
@@ -134,10 +134,10 @@ function comparer( target, docid, modpath )
      * @return a string being the MVD's description
      */
     this.getDocTitle = function() {
-        $.get( "/compare/title?docid="+docid, 
+        jQuery.get( "/compare/title?docid="+docid, 
             function( data ) {
                 self.title = data;
-                $("#top").prepend( data );
+                jQuery("#top").prepend( data );
                 self.getList(self.version1, 
                     "version1", "long_name1", "leftWrapper" );
                 self.getNextVersion( self.version1 );
@@ -182,7 +182,7 @@ function comparer( target, docid, modpath )
                 // skip "<!--styles: "
                 css = body.substring( 12+pos1, pos2 );
                 // add extracted CSS to head
-                $("head style").last().after(
+                jQuery("head style").last().after(
                     '<style type="text/css">'
                     +css+'</style>');
             }
@@ -199,9 +199,9 @@ function comparer( target, docid, modpath )
      * Scale a div to its parent's size (or just use 100%?)
      */
     this.fitWithinParent = function( id ) {
-	    var elem = $("#"+id);
+	    var elem = jQuery("#"+id);
         var topOffset = elem.offset().top;
-	    var windowHeight = $(window).height();
+	    var windowHeight = jQuery(window).height();
 	    // compute the height, set it
 	    var vPadding = this.valueOf(elem.css("padding-top"))
 		    +this.valueOf(elem.css("padding-bottom"));
@@ -218,8 +218,8 @@ function comparer( target, docid, modpath )
             this.timeoutId = window.setTimeout(function(){
                 self.scroller=undefined;
                 self.timeoutId = 0;
-                self.leftScrollTop = $("#leftColumn").scrollTop();
-                self.rightScrollTop = $("#rightColumn").scrollTop();
+                self.leftScrollTop = jQuery("#leftColumn").scrollTop();
+                self.rightScrollTop = jQuery("#rightColumn").scrollTop();
             // this should be fairly coarse-grained
             // the shortest time for switching between scroll-sides
             }, 300);
@@ -229,9 +229,9 @@ function comparer( target, docid, modpath )
      */
     this.synchroScroll = function()
     {
-	    var leftDiv = $("#leftColumn");
+	    var leftDiv = jQuery("#leftColumn");
         var leftTop = leftDiv.scrollTop();
-        var rightDiv = $("#rightColumn");
+        var rightDiv = jQuery("#rightColumn");
         var rightTop = rightDiv.scrollTop();
         if ( rightTop != self.rightScrollTop )
         {
@@ -377,7 +377,7 @@ function comparer( target, docid, modpath )
         return a;
     }
     this.buildLeftScrollTables=function(){
-        var lhs = $("#leftColumn");
+        var lhs = jQuery("#leftColumn");
         lhs.scrollTop(0);
         this.leftScrollTop = 0;
         this.leftIdsToOffsets = {};
@@ -388,7 +388,7 @@ function comparer( target, docid, modpath )
             console.log("left:"+this.leftOffsetsToIds[i].offset+" "+this.leftOffsetsToIds[i].id);*/
     };
     this.buildRightScrollTables=function(){
-        var rhs = $("#rightColumn");
+        var rhs = jQuery("#rightColumn");
         rhs.scrollTop(0);
         this.rightScrollTop = 0;
         this.rightIdsToOffsets = {};
@@ -407,19 +407,19 @@ function comparer( target, docid, modpath )
     this.build = function()
     {
         // first build the framework
-        var form = $('<form id="default" action="/compare"></form>').prependTo("#"+this.target);
+        var form = jQuery('<form id="default" action="/compare"></form>').prependTo("#"+this.target);
         form.attr("name", "default" );
         form.attr( "method", "post" );
-        var divCentre = $('<div id="twinCentreColumn"></div>').prependTo(form);
-        var hidden = $('<input id="docid" type="hidden"></input>').insertBefore("#twinCentreColumn");
+        var divCentre = jQuery('<div id="twinCentreColumn"></div>').prependTo(form);
+        var hidden = jQuery('<input id="docid" type="hidden"></input>').insertBefore("#twinCentreColumn");
         hidden.attr("name","docid");
         hidden.attr("value",this.docid);
-        $('<div id="rightColumn"></div>').prependTo(divCentre);
-        $('<div id="leftColumn"></div>').prependTo(divCentre);
+        jQuery('<div id="rightColumn"></div>').prependTo(divCentre);
+        jQuery('<div id="leftColumn"></div>').prependTo(divCentre);
         // top div contains title and two drop-downs
-        var divTop = $('<div id="top"></div>').prependTo(divCentre);
+        var divTop = jQuery('<div id="top"></div>').prependTo(divCentre);
         // add a row containing the two dropdowns
-        var right = $('<div><div id="leftWrapper"></div></div>').prependTo(divTop);
+        var right = jQuery('<div><div id="leftWrapper"></div></div>').prependTo(divTop);
         right.append('<div id="rightWrapper"></div>');
         // now fill it - sets off cascade of functions
         this.getVersion1();

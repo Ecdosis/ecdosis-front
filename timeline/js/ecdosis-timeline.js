@@ -1,29 +1,17 @@
-function timeline(target,docid,modpath,title,subtitle,event_type) {
+function timeline(target,docid,modpath,title,subtitle,event_type,language) {
     this.target = target;
     this.docid = docid;
     this.title = title;
     this.subtitle = subtitle;
+    this.language = language;
     self = this;
     this.options = ['biography','composition','letter','other','all'];
-    /**
-     * Get data from the server
-     * @param theUrl the url to query
-     */
-    this.httpGet = function httpGet(theUrl)
-    {
-        var xmlHttp = null;
-        xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", theUrl, false );
-        if ( xmlHttp.readyState==1 )
-            xmlHttp.send( null );
-        return xmlHttp.responseText;
-    };
     /**
      * Add the years to the year dropdown, based on the events
      * @param jsObject the plain js object form of the events list
      */
     this.buildYearDropdown = function( jsObject ) {
-        var dates = jsObject.timeline.date;
+        var dates = jsObject.events;
         var dropdown = jQuery("#year_dropdown");
         dropdown.unbind();
         dropdown.children().remove();
@@ -31,9 +19,9 @@ function timeline(target,docid,modpath,title,subtitle,event_type) {
         var i = 0;
         for ( i=0;i<dates.length;i++ )
         {
-            var year = dates[i].startDate.split(",");
-            if ( years.length==0 || (year.length==3 && years[years.length-1]!=year[0]) )
-                years.push(year[0]);
+            var year = dates[i].start_date.year;
+            if ( years.length==0 || years[years.length-1]!=year )
+                years.push(year);
         }
         for ( i=0;i<years.length;i++ )
         {
@@ -51,7 +39,6 @@ function timeline(target,docid,modpath,title,subtitle,event_type) {
     this.addToolbar = function( target ) {
         if ( jQuery("#timeline-toolbar").length>0 )
             jQuery("#timeline-toolbar").remove();
-        
         var html = '<div id="timeline-toolbar">';
         html += '<select id="event_type">';
         for ( var i=0;i<this.options.length;i++ )
@@ -69,6 +56,56 @@ function timeline(target,docid,modpath,title,subtitle,event_type) {
         html += 'type="text"></div>';
         html += '</div>';
         jQuery("#"+target).before(html);
+        jQuery("#search_button").click( function() {
+            var expr = $("#search_expr").val();
+            var n = 0;
+            if ( expr != null && expr.length>0 ) { 
+                var dates = timeline.config.events;
+                for ( var index=n+1;index<dates.length;index++ ) 
+                {
+                    var text = dates[index].text.headline;
+                    var desc = dates[index].text.text;
+                    if (text != null && desc != null && (text.length>0||desc.length>0) ) {
+                        var res1 = text.search(new RegExp(expr, "i"));
+                        var res2 = desc.search(new RegExp(expr, "i"));
+                        if ( (res1!=-1)||(res2!=-1) ) {
+                            n = index+1;
+                            break;
+                        }
+                    }
+                }
+                if ( 0 != n )
+                    timeline.goTo(n);
+                else 
+                {
+                    var elem = jQuery("#search_expr");
+                    elem.val("not found");
+                }
+            }
+        });
+    };
+    this.replaceGetParam = function( url, key, value )
+    {
+        var parts = url.split("&");
+        var newUrl = "";
+        for ( var i=0;i<parts.length;i++ )
+        {
+            if ( parts[i].indexOf("=")!= -1 )
+            {
+                var halves = parts[i].split("=");
+                if ( halves[0] == key )
+                    newUrl += key+"="+value;
+                else
+                    newUrl += halves[0]+"="+halves[1];
+            }
+            else
+            {
+                newUrl += parts[i];
+            }
+            if ( i < parts.length-1 )
+                newUrl += "&";
+        }
+        return newUrl;
     };
     /**
      * Update the timeline with a fresh selection of events
@@ -76,34 +113,56 @@ function timeline(target,docid,modpath,title,subtitle,event_type) {
      */
     this.changeType = function( new_type ) {
         var url = "http://"+window.location.hostname+
-        "/json/timelinenew/?docid="+this.docid
-        +"&title="+this.title
-        +"&subtitle="+this.subtitle
+        "/project/timeline/?docid="+this.docid
+        +"&title="+encodeURIComponent(this.title)
+        +"&subtitle="+encodeURIComponent(this.subtitle)
         +"&event_type="+new_type;
         this.event_type = new_type;
-        var dataObject = this.httpGet(url);
-        if ( dataObject != null )
-        {
-            var jsObject = eval("("+dataObject+")");
-            var pWidth = jQuery("#"+target).width();
-            var parent_config = { type: 'timeline',
-                width: pWidth, height: 500,
-                source: jsObject, embed_id: target };
-            this.addToolbar(target);
-            this.buildYearDropdown(jsObject);
-            jQuery("#"+this.target).children().remove();
-            if ( window.VMM !== undefined )
+        jQuery.get(url, function(data) {
+            var dataObj = data;
+            if ( dataObj != null )
             {
-                 window.VMM.config = undefined;
-                 window.VMM.slider = undefined;
-                 window.VMM = undefined;
+                var pWidth = jQuery("#"+target).width();
+                var config = { width: pWidth, height: 500, 
+                    language: self.language };
+                self.addToolbar(target);
+                self.buildYearDropdown(dataObj);
+                jQuery("#"+self.target).children().remove();
+                config.source = dataObj;
+                config.embed_id = self.target;
+                createStoryJS(config);
+                jQuery("#year_dropdown").change( function(e) {
+                    var dates = timeline.config.events;
+                    var year = $("#year_dropdown").val();
+                    var top = 0;
+                    var mid = 0;
+                    var bot = dates.length-1;
+                    while ( top <= bot )
+                    {
+                        mid = Math.floor((top+bot)/2);
+                        var midYear = dates[mid].start_date.data.year;
+                        var res = year.localeCompare(midYear);
+                        if ( res==0 )
+                        {
+                            timeline.goTo(mid+1);
+                            return;
+                        }
+                        else if ( res < 0 )
+                            bot = mid-1;
+                        else
+                            top = mid+1;
+                    }
+                    timeline.goTo(mid+1);
+                });
             }
-            createStoryJS( parent_config );
-        }
-        var eventType = jQuery("#event_type");
-        eventType.change(function(event) {
-            if ( eventType.val() != self.event_type )
-                self.changeType(eventType.val());
+            var eventType = jQuery("#event_type");
+            eventType.change(function(event) {
+                if ( eventType.val() != self.event_type )
+                {
+                    var href = self.replaceGetParam(location.href,"event_type",eventType.val());
+                    location.assign(href);
+                }
+            });
         });
     };
     this.changeType(event_type);
@@ -155,6 +214,7 @@ jQuery(function(){
     var event_type = safe_param(params,'event_type','all');
     var subtitle = safe_param(params,'subtitle','Biographical events');
     var title = safe_param(params,'title','Project timeline');
+    var language = safe_param(params,"language","en");
     var instance = new timeline(params['target'],params['docid'],
-        params['modpath'],title,subtitle,event_type);
+        params['modpath'],title,subtitle,event_type,language);
 });

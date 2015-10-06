@@ -1,3 +1,6 @@
+#progress { position:fixed; top: 50%; left: 50%; font-weight: bold; font-size: 1.2em; 
+transform: translate(-50%, -50%); 
+padding: 50px; border: 1px solid black; background-color: lightgrey}
 #versions td { padding-top:0px; padding-bottom:0px;}
 th.sorted { color: #2883DE }
 td .fa {color: #2883DE}
@@ -5,6 +8,9 @@ td .fa {color: #2883DE}
 .tabletitle {margin-top:10px;text-align:center}
 .celltitle {margin-left:20px}
 .leastyear {text-align:right;padding-right:2em}
+.alias {font-style: italic }
+.alias_link:hover {cursor:pointer}
+.alias_link {color:#2883DE;font-style: italic}
 .version_title::before {
     content: "title: ";
     font-style: italic;

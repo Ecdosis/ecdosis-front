@@ -12,7 +12,7 @@ function works_all()
     $projid = (array_key_exists("projid",$_GET))?$_GET['projid']:"english/harpur";
     $mod_path = drupal_get_path('module', 'works');
     $html ='<script type="text/javascript" src="'.$mod_path
-          .'/works.js?target=content&title=Poetical%20Works&projid='
+          .'/works.js?target=content&title=Poems&projid='
           .$projid.'"></script>';
     return $html;
 }
@@ -50,7 +50,7 @@ function works_block_view($delta = '') {
       $block['subject'] = t('Works');
       $block['content'] = '<script type="text/javascript" src="'
           .drupal_get_path('module', 'works')
-          .'/works.js?target=content&title=Poetical%20Works&projid='
+          .'/works.js?target=content&title=Poems&projid='
           .$_GET['projid'].'"></script>';
       return $block;
   }

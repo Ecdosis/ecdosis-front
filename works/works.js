@@ -13,18 +13,24 @@ function works(target,title,projid)
     this.cellIds = ["hnumber","normtitle","firstyear"];
     this.projid = projid;
     var self = this;
+    /**
+     * Copy the generated HTML into the page
+     * @param html the html of the table
+     */
     this.set_html = function( html )
     {
         var tgt = jQuery("#"+this.target);
         jQuery("#"+this.target).empty();
         tgt.append(html);
     };
+    /**
+     * Get the pathname of the cms installation
+     * @return the path leading to the website home from webdir home
+     */
     this.get_cms_path = function() {
         var parts = window.location.pathname.split("/");
         if ( parts.length > 1 )
-        {
             return '/'+parts[1];
-        }        
         else
             return '/'+window.location.pathname;
     };
@@ -32,32 +38,39 @@ function works(target,title,projid)
      * Find the lowest year in all the versions of a work
      */
     this.getLeastYear = function( work ) {
-        var year = 1000000;
-        var tempCirca = false;
-        var wasCirca = false;
-        for ( var i=0;i<work.versions.length;i++ )
+        if ( work.alias )
         {
-            var tempYear = work.versions[i].year;
-            if ( tempYear != undefined )
+            return this.getLeastYear(this.lookupTable[work.id]);
+        }
+        else
+        {
+            var year = 1000000;
+            var tempCirca = false;
+            var wasCirca = false;
+            for ( var i=0;i<work.versions.length;i++ )
             {
-                if ( tempYear.indexOf("c.")==0 )
+                var tempYear = work.versions[i].year;
+                if ( tempYear != undefined )
                 {
-                    tempCirca = true;
-                    tempYear = tempYear.substring(2);
-                }
-                if ( parseInt(tempYear)<year )
-                {
-                    wasCirca = (tempCirca)?true:false;
-                    year = parseInt(tempYear);
+                    if ( tempYear.indexOf("c.")==0 )
+                    {
+                        tempCirca = true;
+                        tempYear = tempYear.substring(2);
+                    }
+                    if ( parseInt(tempYear)<year )
+                    {
+                        wasCirca = (tempCirca)?true:false;
+                        year = parseInt(tempYear);
+                    }
                 }
             }
+            if ( year == 1000000 )
+                return 0;
+            else if ( wasCirca )
+                return "c."+year;
+            else
+                return year;
         }
-        if ( year == 1000000 )
-            return 0;
-        else if ( wasCirca )
-            return "c."+year;
-        else
-            return year;
     };
     /**
      * Build one cell in the table header based on the sort state
@@ -120,7 +133,7 @@ function works(target,title,projid)
         {
             if ( typeof aField=="string" && aField.indexOf("c.")==0 )
                 aField = parseInt(aField.substring(2));
-            if ( typeof bField=="string" &&  bField.indexOf("c.")==0 )
+            if ( typeof bField=="string" && bField.indexOf("c.")==0 )
                 bField = parseInt(bField.substring(2));
         }
         if ( ascending )
@@ -199,8 +212,121 @@ function works(target,title,projid)
             +this.projid+'/'+workid+"/"+versionid;
     };
     /**
-     * Rebuild the works table using the existing downloaded data, perhaps resorted
+     * Format the list of versions and add it to the currently open row
+     * @param hid the h-number of the row
+     * @param newCell the new empty cell to contain the foramtted list
      */
+    this.addVersionList = function(hid,newCell) {
+        var versions = self.lookupTable[hid].versions;
+        newCell.prepend("<ul></ul>");
+        var list = newCell.children("ul");
+        for ( var i=0;i<versions.length;i++ )
+        {
+            var v = versions[i];
+            var entry = '<li>';
+            entry += '<a href="'+self.makeUrl(hid,v['version-id'])+'">'+v['version-id']+'</a>: ';
+            if ( v['version-title'] != undefined )
+                entry += '<span class="version_title">'+v['version-title']+"</span>";
+            if ( v['first-line'] != undefined )
+                entry = self.sep(entry, '<span class="version_firstline">'+v['first-line']+"</span>");
+            if ( v['year'] != undefined )
+                entry = self.sep(entry, '<span class="version_year">'+v['year']+"</span>");
+            if ( v['date'] != undefined )
+                entry = self.sep(entry, '<span class="version_date">'+v['date']+"</span>");
+            if ( v['source'] != undefined )
+                entry = self.sep(entry, '<span class="version_source">'+v['source']+"</span>");
+            if ( v['page'] != undefined )
+                entry = self.sep(entry, '<span class="version_page">'+v['page']+"</span>");
+            if ( v['notes'] != undefined )
+                entry = self.sep(entry, '<span class="version_notes">'+v['notes']+"</span>");
+            if ( v['series'] != undefined )
+                entry = self.sep(entry, '<span class="version_series">'+v['series']+"</span>");
+            if ( v['ms'] != undefined )
+                entry = self.sep(entry,'<span class="version_ms">'+v['ms']+"</span>");
+            if ( v['format'] != undefined )
+                entry = self.sep(entry,'<span class="version_format">'+v['format']+"</span>");
+            entry += "</li>";
+            list.append(entry);
+        }
+    };
+    /**
+     * Rebuild the works table using the existing downloaded data, perhaps resorted
+     * @param vid the version id of the alias name
+     * @param newCell the new enmpty cell
+     */
+    this.addAliasRecord = function(vid,newCell) {
+        var alias = self.lookupTable[vid];
+        newCell.prepend("<ul></ul>");
+        var list = newCell.children("ul");
+        var entry = '<li>';
+        entry += 'See: <span class="alias_link" data-hid="'+alias.id
+            +'">'+alias.see+'</span>';
+        entry += "</li>";
+        list.append(entry);
+        list.children().first().click(function(e) {
+            var item = e.target;
+            var span;
+            // get li and span
+            if ( e.target.tagName == 'SPAN' )
+            {
+                 span = jQuery(item);
+                 item = item.parentNode;
+            }
+            else 
+                span = jQuery(item).children().first();
+            var hid = span.attr("data-hid");
+            var hits = jQuery("td:contains("+hid+")");
+            hits.each(function(index) {
+                if (jQuery(this).text() == hid)
+                {
+                    jQuery(window).scrollTop(jQuery(this).offset().top-jQuery(window).height()/2); 
+                    self.toggleRow(alias.defaultVersion);
+                    self.toggleRow(hid);             
+                }
+            });
+        });
+    };
+    /**
+     * Toggle a given row between open and closed states
+     * @param hid the id of the row
+     */
+    this.toggleRow = function(hid) {
+        var iSpan;
+        var row;
+        var rows = jQuery("td:contains("+hid+")");
+        rows.each(function(index) {
+            if (jQuery(this).text() == hid)
+            {
+                iSpan = jQuery(this).prev().children().first();  
+                row = this.parentNode;             
+            }
+        });
+        if ( iSpan != undefined )
+        {
+            if ( iSpan.attr("class") == "fa fa-plus" )
+            {
+                iSpan.attr("class","fa fa-minus");
+                jQuery(row).after('<tr><td colspan="4"></td></tr>');
+                var newRow = jQuery(row).next();
+                var newCell = newRow.children().first();
+                var cells = jQuery(row).children();
+                var idCell = cells.eq(1);
+                var hid = idCell.text();
+                if ( self.lookupTable[hid].alias )
+                    self.addAliasRecord(hid,newCell);
+                else
+                    self.addVersionList(hid,newCell);
+            }
+            else
+            {
+                iSpan.attr("class","fa fa-plus");
+                var newRow = jQuery(row).next();
+                newRow.remove();
+            }
+        }
+        else
+            console.log("couldn't find target row");
+    };
     this.rebuild = function() {
         var html = '<div id="works">';
         html += '</div>';
@@ -211,17 +337,36 @@ function works(target,title,projid)
         var table = jQuery("#versions");
         table.append(this.makeHeader());
         this.lookupTable = {};
+        // make an index of all the entries
+        for ( var i=0;i<this.jsonTable.length;i++ )
+        {
+            if ( !this.jsonTable[i].alias )
+                this.lookupTable[this.jsonTable[i].id]=this.jsonTable[i];
+            else
+                this.lookupTable[this.jsonTable[i].defaultVersion]=this.jsonTable[i];
+        }
+        // now make the visible rows of all the (mixed) entries
         for ( var i=0;i<this.jsonTable.length;i++ )
         {
             this.jsonTable[i].leastYear = this.getLeastYear(this.jsonTable[i]);
             var row = '<tr><td class="initial" title="show versions">';
             row += '<i class="fa fa-plus"></i></td>';
-            row += '<td>'+this.jsonTable[i].id+'</td>';
-            row += '<td>'+this.jsonTable[i].title+'</td>';
+            if ( this.jsonTable[i].alias )
+            {
+                row += '<td class="alias">'+this.jsonTable[i].defaultVersion+'</td>';
+                row += '<td class="alias">'+this.jsonTable[i].title+'</td>';
+            }
+            else 
+            {
+                row += '<td>'+this.jsonTable[i].id+'</td>';
+                row += '<td>'+this.jsonTable[i].title+'</td>';
+            }
             row += '<td class="leastyear">'+this.jsonTable[i].leastYear+'</td>';
-            this.lookupTable[this.jsonTable[i].id]=this.jsonTable[i];
             table.append(row);
         }
+        /**
+         * Handlers for the header
+         */
         jQuery("#hnumber").click(function() {
             self.toggleState(0,"id");
         });
@@ -231,69 +376,22 @@ function works(target,title,projid)
         jQuery("#firstyear").click(function() {
             self.toggleState(2,"leastYear");
         });
+        /**
+         * What happens when you click on the plus
+         */
         jQuery(".initial").click(function(e){
             var cell = e.target;
-            var iSpan;
             if ( e.target.tagName == 'I' )
-            {
-                 iSpan = jQuery(cell);
                  cell = cell.parentNode;
-            }
-            else 
-                iSpan = jQuery(cell).children().first();
-            var row = cell.parentNode;
-            if ( iSpan.attr("class") == "fa fa-plus" )
-            {
-                iSpan.attr("class","fa fa-minus");
-                jQuery(row).after('<tr><td colspan="4"></td></tr>');
-                var newRow = jQuery(row).next();
-                var newCell = newRow.children().first();
-                var cells = jQuery(row).children();
-                var idCell = cells.eq(1);
-                var versions = self.lookupTable[idCell.text()].versions;
-                newCell.prepend("<ul></ul>");
-                var list = newCell.children("ul");
-                for ( var i=0;i<versions.length;i++ )
-                {
-                    var v = versions[i];
-                    var entry = '<li>';
-                    entry += '<a href="'+self.makeUrl(idCell.text(),v['version-id'])+'">'+v['version-id']+'</a>: ';
-                    if ( v['version-title'] != undefined )
-                        entry += '<span class="version_title">'+v['version-title']+"</span>";
-                    if ( v['first-line'] != undefined )
-                        entry = self.sep(entry, '<span class="version_firstline">'+v['first-line']+"</span>");
-                    if ( v['year'] != undefined )
-                        entry = self.sep(entry, '<span class="version_year">'+v['year']+"</span>");
-                    if ( v['date'] != undefined )
-                        entry = self.sep(entry, '<span class="version_date">'+v['date']+"</span>");
-                    if ( v['source'] != undefined )
-                        entry = self.sep(entry, '<span class="version_source">'+v['source']+"</span>");
-                    if ( v['page'] != undefined )
-                        entry = self.sep(entry, '<span class="version_page">'+v['page']+"</span>");
-                    if ( v['notes'] != undefined )
-                        entry = self.sep(entry, '<span class="version_notes">'+v['notes']+"</span>");
-                    if ( v['series'] != undefined )
-                        entry = self.sep(entry, '<span class="version_series">'+v['series']+"</span>");
-                    if ( v['ms'] != undefined )
-                        entry = self.sep(entry,'<span class="version_ms">'+v['ms']+"</span>");
-                    if ( v['format'] != undefined )
-                        entry = self.sep(entry,'<span class="version_format">'+v['format']+"</span>");
-                    entry += "</li>";
-                    list.append(entry);
-                }
-            }
-            else
-            {
-                iSpan.attr("class","fa fa-plus");
-                var newRow = jQuery(row).next();
-                newRow.remove();
-            }
+            self.toggleRow( jQuery(cell).next().text() );
         });
     };
     var url = "http://"+window.location.hostname+"/project/works";
+    jQuery("body").append('<div id="progress">Please wait while the table loads...</div>');
     jQuery.get(url,function(data) {
         self.jsonTable = data;
         self.rebuild();
+        jQuery("#progress").remove();
     });
 }
 /**
