@@ -4,6 +4,7 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
     this.title = title;
     this.subtitle = subtitle;
     this.language = language;
+    this.modpath=modpath;
     self = this;
     this.options = ['biography','composition','letter','other','all'];
     /**
@@ -45,14 +46,15 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
         {
             var selected = "";
             if ( this.options[i] == this.event_type )
-                selected = ' selected';
-            html += '<option'+selected+'>'+this.options[i]+'</option>';
+                selected = ' selected="selected"';
+            html += '<option'+selected+' value="'+this.options[i]+'">'
+                +self.strs.event_types[this.options[i]]+'</option>';
         }
         html += '</select>';
-        html += '<div id="years">go to year: ';
+        html += '<div id="years">'+self.strs.go_to_year+': ';
         html += '<select id="year_dropdown"></select></div>';
         html += '<div id="search_box"><input id="search_button" ';
-        html += 'value="search" type="button"> <input id="search_expr" ';
+        html += 'value="'+self.strs.search+'" type="button"> <input id="search_expr" ';
         html += 'type="text"></div>';
         html += '</div>';
         jQuery("#"+target).before(html);
@@ -165,7 +167,18 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
             });
         });
     };
-    this.changeType(event_type);
+    /* define all language-related strings for later */
+    var script_name = window.location.pathname;
+    var lastIndex = script_name.lastIndexOf("/");
+    if ( lastIndex !=-1 )
+       script_name = script_name.substr(0,lastIndex);
+    script_name += '/'+this.modpath+'/js/strings.'+this.language+'.js';
+    jQuery.getScript(script_name,function(data, textStatus, jqxhr) {
+        self.strs = load_strings();
+        console.log(self.strs);
+        console.log("loaded "+script_name+" successfully");
+        self.changeType(event_type);
+    });
 }
 /**
  * This reads the "arguments" to the javascript file
