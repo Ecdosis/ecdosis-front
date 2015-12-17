@@ -26,7 +26,7 @@ function find_menu()
         'type' => MENU_NORMAL_ITEM
     );
     $items['find'] = array(
-        'title' => 'Regenerate find',
+        'title' => 'Find',
         'page callback' => 'find_all',
         'access arguments' => array('access content'),
         'type' => MENU_CALLBACK
