@@ -4,7 +4,6 @@ function compare_preprocess_page(&$vars)
     if ( strpos(request_uri(),"compare") )
     {
         drupal_add_css(drupal_get_path('module','compare').'/css/compare.css','file');
-        drupal_add_css(drupal_get_path('module','compare').'/js/compare.js','file');
     }
 }
 function compare_all()
