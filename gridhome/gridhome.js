@@ -48,7 +48,7 @@ function get_args( scrName )
     return params;
 }
 /**
- * Load the rebuild index dialog with two arguments
+ * Load the home page
  */
 jQuery(document).ready( function() { 
     var params = get_args('gridhome');
