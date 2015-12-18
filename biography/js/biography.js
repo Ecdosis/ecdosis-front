@@ -66,7 +66,7 @@ function biography(target,docid,modpath) {
             xmlHttp.send( null );
         return xmlHttp.responseText;
     }
-    var url = "http://"+window.location.hostname+"/json/biography/";
+    var url = "http://"+window.location.hostname+"/project/biography/";
     url += "?docid="+docid;
     var dataObject = this.httpGet(url);
     if ( dataObject != null )
