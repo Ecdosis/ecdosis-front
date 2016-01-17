@@ -97,6 +97,7 @@ function find(target)
         var url = encodeURI("http://"+window.location.hostname
             +"/search/find?query="+query_text+"&docid="
             +jQuery("#indices").val());
+        console.log("search url="+url);
         jQuery.get(url,function(data) {
             self.numHits = data.numHits;
             self.totalHits = data.totalHits;

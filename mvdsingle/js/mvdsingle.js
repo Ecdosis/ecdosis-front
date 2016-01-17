@@ -11,6 +11,7 @@ function mvdsingle(target,docid,version1,selections)
     this.version1 = version1;
     this.selections = selections;
     this.target = target;
+    this.layers = {base:'original text',del1:'first deletion layer',rdg1:'first alternative layer'};
     var self = this;
     /**
      * Copy the stylesheet in a comment returned by the service to head
@@ -80,6 +81,57 @@ function mvdsingle(target,docid,version1,selections)
         }, 1000);
     };
     /**
+     * Update the source string after the dropdown
+     */
+    this.updateSource = function() {
+        var title = jQuery("#versions option:selected").attr("title");
+        jQuery("#source").text(title);
+    };
+    /**
+     * Make the version title of the dropdown menu option
+     * @param sources map of version names to sources
+     * @param option the option object
+     */
+    this.setOptionTitle = function(sources,option) {
+        var vid = option.val();
+        var parts = vid.split("/");
+        if ( parts.length>1&&parts[1] in sources )
+        {
+             
+             var title = sources[parts[1]];
+             if ( parts.length > 2 && parts[parts.length-1] in self.layers )
+                 title += ": "+self.layers[parts[parts.length-1]];
+             option.attr("title",title);
+        }
+    };
+    /**
+     * Get version metadata and use it to add sources to each version
+     */
+    this.getVersionMetadata = function() {
+        var url = "http://"+window.location.hostname
+            +"/formatter/metadata?docid="+docid;
+        jQuery.get(url, function(response) {
+            var sources = {};
+            for ( var i=0;i<response.length;i++ ) 
+            {
+                var key = Object.keys(response[i])[0];
+                var value = response[i][key];
+                sources[key]=value;
+            }
+            var versions = jQuery("#versions");
+            versions.parent().append('<span id="source"></span>');
+            versions.find("option").each(function(){
+                var option = jQuery(this);
+                self.setOptionTitle(sources,option);
+            });
+            self.updateSource();
+            if ( self.voffsets != undefined && self.voffsets.length > 0 )
+            {
+                self.scrollToSelection();
+            }
+        });
+    };
+    /**
      * Get the text body of the current version. Highlight any hits
      * @param version the version to display
      */
@@ -90,12 +142,9 @@ function mvdsingle(target,docid,version1,selections)
             url += '&selections='+self.voffsets;
         jQuery.get(url, function(response) {
             self.installCss(response);
-            jQuery("#body").children().remove();
+            jQuery("#body").contents().remove();
             jQuery("#body").append(response);
-            if ( self.voffsets != undefined && self.voffsets.length > 0 )
-            {
-                self.scrollToSelection();
-            }
+            self.getVersionMetadata();
         });
     };
     /**
@@ -133,6 +182,7 @@ function mvdsingle(target,docid,version1,selections)
             });
             var first = self.getSelectedOption(responseText);
             self.getVOffsets(first);
+            self.updateSource();
         });
     };
     // install boilerplate text

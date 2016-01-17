@@ -9,6 +9,11 @@ function comparer( target, docid, modpath )
     /** timeoutId for clearning scrolling flag */
     this.timeoutId = 0;
     var self = this;
+    this.setSelectLabel = function(select) {
+        var parts = select.val().split("/");
+        if ( parts.length > 1 )
+            select.prev().text(parts[1]);
+    };
     /**
      * Get a list menu
      * @param version1 the version to use as the default
@@ -30,14 +35,16 @@ function comparer( target, docid, modpath )
             if ( data != undefined && data.length > 0 )
             {
                 jQuery("#"+parentId).prepend( data );
+                self.setSelectLabel(jQuery("#"+parentId+" select"));
                 // replace popup description with selected version name
-                id = longNameId.substr("long_name".length,longNameId.length);
+                var id = longNameId.substr("long_name".length,longNameId.length);
                 var desc = jQuery("#long_name"+id);
 	            desc.text(jQuery("#version"+id+" :selected").attr("title"));
                 jQuery("#version"+id).change( function(){
+                    self.setSelectLabel(jQuery("#version"+id));
                     // reload the versions
-                    var id = "#version"+id;
-                    if ( id == "#version1" )
+                    var idStr = "#version"+id;
+                    if ( idStr == "#version1" )
                         self.version1 = jQuery("#version1").val();
                     else
                         self.version2 = jQuery("#version2").val();
@@ -71,6 +78,8 @@ function comparer( target, docid, modpath )
         {    
             if ( data != undefined && data.length > 0 )
             {
+
+                jQuery("#"+parentId).empty();
                 jQuery("#"+parentId).prepend(self.extractCSSFromBody(data) );
                 if ( parentId == "rightColumn" )
                 {
@@ -120,7 +129,8 @@ function comparer( target, docid, modpath )
      * Get the first version of the cortex
      */
     this.getVersion1 = function() {
-        jQuery.get( "/compare/version1?docid="+docid, 
+	var url = "http://"+window.location.hostname+"/compare/version1?docid="+docid;
+        jQuery.get( url, 
             function( data ) {
                 self.version1 = data;
                 self.getDocTitle();
@@ -134,7 +144,8 @@ function comparer( target, docid, modpath )
      * @return a string being the MVD's description
      */
     this.getDocTitle = function() {
-        jQuery.get( "/compare/title?docid="+docid, 
+        var url = "http://"+window.location.hostname+"/compare/title?docid="+docid;
+        jQuery.get( url, 
             function( data ) {
                 self.title = data;
                 jQuery("#top").prepend( data );
@@ -406,6 +417,7 @@ function comparer( target, docid, modpath )
      */
     this.build = function()
     {
+        console.log("build function");
         // first build the framework
         var form = jQuery('<form id="default" action="/compare"></form>').prependTo("#"+this.target);
         form.attr("name", "default" );
