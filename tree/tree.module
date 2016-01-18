@@ -1,0 +1,37 @@
+<?php
+function tree_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"tree") )
+    {
+        drupal_add_css(drupal_get_path('module','tree').'/css/tree.css','file');
+        drupal_add_css(drupal_get_path('module','tree').'/css/font-awesome.min.css','file');  
+    }
+}
+function tree_block_info() {
+  $blocks['tree'] = array(
+    'info' => t('Generate phylogenetic trees from MVDs'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function tree_help($path, $arg) {
+    switch ($path)
+    {
+        case "admin/help#tree":
+            return '<p>' .
+                t("Generate rooted phylogenetic trees")
+                . '</p>';
+            break;
+    }
+}
+function tree_block_view($delta = '') {
+  switch ($delta) {
+    case 'tree':
+      $mod_path = drupal_get_path('module', 'tree');
+      $block['content'] = '<script type="text/javascript" src="'.$mod_path
+          .'/js/tree.js?target=content&'
+          .'docid='.$_GET["docid"].'"></script>';
+      return $block;
+  }
+}
+

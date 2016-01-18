@@ -1,0 +1,4 @@
+name = tree
+description = Generate rooted phylogentic trees for MVDs
+core = 7.x
+configure = admin/config/content/tree
