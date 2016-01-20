@@ -6,16 +6,24 @@ function compare_preprocess_page(&$vars)
         drupal_add_css(drupal_get_path('module','compare').'/css/compare.css','file');
     }
 }
+function build_compare_args()
+{
+    $args = "";
+    if ( array_key_exists ("docid", $_GET) )
+	$args .= '&docid='.$_GET["docid"];
+    if ( array_key_exists ("target", $_GET) )
+	$args .= '&target='.$_GET["target"];
+    if ( strpos($args,'&')==0 )
+        $args = substr($args,1);
+    return $args;
+}
 function compare_all()
 {
     $mod_path = drupal_get_path('module', 'compare');
     $doc_path = drupal_get_path('module', 'documents');
-    $docid = "";
-    if ( array_key_exists ("docid", $_GET) )
-	$docid = $_GET["docid"];
+    $args = build_compare_args();
     $html ='<script type="text/javascript" src="'.$mod_path
-          .'/js/compare.js?target=content&'
-          .'docid='.$docid.'"></script>';
+          .'/js/compare.js?'.$args.'"></script>';
     return $html;
 }
 function compare_menu()
@@ -58,10 +66,10 @@ function compare_block_view($delta = '') {
   switch ($delta) {
     case 'compare':
       $block['subject'] = t('Compare MVDs');
+      $args = build_compare_args();
       $mod_path = drupal_get_path('module', 'compare');
       $block['content'] = '<script type="text/javascript" src="'.$mod_path
-          .'/js/compare.js?target=content&'
-          .'docid='.$_GET["docid"].'"></script>';
+          .'/js/compare.js?'.$args.'"></script>';
       return $block;
   }
 }

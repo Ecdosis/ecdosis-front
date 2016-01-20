@@ -190,42 +190,73 @@ function mvdsingle(target,docid,version1,selections)
     // start the ball rolling...
     this.installDropdown();    
 }
+function get_one_param( params, name )
+{
+    var parts = params.split("&");
+    for ( var i=0;i<parts.length;i++ )
+    {
+        var halves = parts[i].split("=");
+        if ( halves.length==2 && halves[0]==name )
+            return halves[1];
+    }
+    return "";
+}
 /**
  * This reads the "arguments" to the javascript file
  * @param scrName the name of the script file minus ".js"
  */
-function getArgs( scrName )
+function getMVDArgs( scrName )
 {
-    var scripts = jQuery("script");
     var params = new Object ();
-    scripts.each( function(i) {
-        var src = jQuery(this).attr("src");
-        if ( src != undefined && src.indexOf(scrName) != -1 )
+    var module_params = localStorage.getItem('mvdsingle_params');
+    if ( module_params != undefined && module_params.length>0 )
+    {
+        var parts = module_params.split("&");
+        for ( var i=0;i<parts.length;i++ )
         {
-            var qStr = src.replace(/^[^\?]+\??/,'');
-            if ( qStr )
-            {
-                var pairs = qStr.split(/[;&]/);
-                for ( var i = 0; i < pairs.length; i++ )
-                {
-                    var keyVal = pairs[i].split('=');
-                    if ( ! keyVal || keyVal.length != 2 )
-                        continue;
-                    var key = unescape( keyVal[0] );
-                    var val = unescape( keyVal[1] );
-                    val = val.replace(/\+/g, ' ');
-                    params[key] = val;
-                }
-            }
-            return params;
+            var halves = parts[i].split("=");
+            if ( halves.length==2 )
+                params[halves[0]] = halves[1];
         }
-    });
+    }
+    else
+    {
+        var scripts = jQuery("script");
+        scripts.each( function(i) {
+            var src = jQuery(this).attr("src");
+            if ( src != undefined && src.indexOf(scrName) != -1 )
+            {
+                var qStr = src.replace(/^[^\?]+\??/,'');
+                if ( qStr )
+                {
+                    var pairs = qStr.split(/[;&]/);
+                    for ( var i = 0; i < pairs.length; i++ )
+                    {
+                        var keyVal = pairs[i].split('=');
+                        if ( ! keyVal || keyVal.length != 2 )
+                            continue;
+                        var key = unescape( keyVal[0] );
+                        var val = unescape( keyVal[1] );
+                        val = val.replace(/\+/g, ' ');
+                        params[key] = val;
+                    }
+                }
+                return params;
+            }
+        });
+    }
+    if ( !('docid' in params) )
+    {
+        var tabs_params = localStorage.getItem('tabs_params');
+        if ( tabs_params != undefined && tabs_params.length>0 )
+            params['docid'] = get_one_param(tabs_params,'docid');
+    }
     return params;
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
     // DOM Ready - do your stuff 
-    var params = getArgs('mvdsingle');
+    var params = getMVDArgs('mvdsingle');
     var viewer = new mvdsingle(params['target'],params['docid'], 
     params['version1'],params['selections']);
 }); 

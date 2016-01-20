@@ -12,7 +12,8 @@ function compose_tabs_params( $args )
             $key = $parts[0];
             if ( strcmp($key,"module")==0
                 || strcmp($key,"modpath")==0
-                || strcmp($key,"tabs")==0 )
+                || strcmp($key,"tabs")==0
+                || strcmp($key,"docid")==0 )
             {
                 if ( strlen($str)>0 )
                     $str .= '&';
@@ -35,7 +36,8 @@ function compose_mod_params( $args )
                 && strcmp($key,"modpath")!=0
                 && strcmp($key,"modules")!=0
                 && strcmp($key,"tabs")!=0
-                && strcmp($key,"target")!=0 )
+                && strcmp($key,"target")!=0
+                && strcmp($key,"docid")!=0 )
             {
                 if ( strlen($str)>0 )
                     $str .= '&';
@@ -47,7 +49,10 @@ function compose_mod_params( $args )
 }
 function tabs_preprocess_page(&$vars)
 {
-    if ( strpos(request_uri(),"tabs") )
+    if (user_access('administer modules') && path_is_admin(current_path())) {
+        drupal_add_css(drupal_get_path('module','tabs').'/tabs.css','file');
+    }
+    else if ( strpos(request_uri(),"tabs") )
     {
         drupal_add_css(drupal_get_path('module','tabs').'/tabs.css','file');
         $uri = request_uri();
@@ -91,7 +96,7 @@ function tabs_preprocess_page(&$vars)
 }
 function tabs_block_info() {
   $blocks['tabs'] = array(
-    'info' => t('Provide a tabbed container for other moduless'),
+    'info' => t('Provide a tabbed container for other modules'),
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
   return $blocks;
@@ -109,8 +114,11 @@ function tabs_help($path, $arg) {
 function tabs_block_view($delta = '') {
   switch ($delta) {
     case 'tabs':
-      $block['content'] = '';
+      $block['subject'] = t('Provide tabbed container');
+      $args = compose_tabs_params();
+      $mod_path = drupal_get_path('module', 'compare');
+      $block['content'] = '<script type="text/javascript" src="'.$mod_path
+          .'/tabs.js?'.$args.'"></script>';
       return $block;
   }
 }
-

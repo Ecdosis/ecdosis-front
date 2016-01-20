@@ -114,6 +114,7 @@ function comparer( target, docid, modpath )
             if ( data != undefined && data.length > 0 )
             {
                 self.version2 = data;
+                console.log("version2="+self.version2);
                 self.getList( self.version2, "version2", 
                     "long_name2", "rightWrapper" );
                 // set content for left hand side
@@ -129,10 +130,10 @@ function comparer( target, docid, modpath )
      * Get the first version of the cortex
      */
     this.getVersion1 = function() {
-	var url = "http://"+window.location.hostname+"/compare/version1?docid="+docid;
-        jQuery.get( url, 
+        jQuery.get( "/compare/version1?docid="+docid, 
             function( data ) {
                 self.version1 = data;
+                console.log("version1="+self.version1);
                 self.getDocTitle();
          })
         .fail( function() {
@@ -144,8 +145,7 @@ function comparer( target, docid, modpath )
      * @return a string being the MVD's description
      */
     this.getDocTitle = function() {
-        var url = "http://"+window.location.hostname+"/compare/title?docid="+docid;
-        jQuery.get( url, 
+        jQuery.get( "/compare/title?docid="+docid, 
             function( data ) {
                 self.title = data;
                 jQuery("#top").prepend( data );
@@ -438,37 +438,67 @@ function comparer( target, docid, modpath )
     };
     this.build();
 }
+function get_one_param( params, name )
+{
+    var parts = params.split("&");
+    for ( var i=0;i<parts.length;i++ )
+    {
+        var halves = parts[i].split("=");
+        if ( halves.length==2 && halves[0]==name )
+            return halves[1];
+    }
+    return "";
+}
 /**
  * This reads the "arguments" to the javascript file
  * @param scrName the name of the script file minus ".js"
- * @return a key-value map of the parameters
  */
-function get_args( scrName )
+function getCompareArgs( scrName )
 {
-    var scripts = jQuery("script");
     var params = new Object ();
-    scripts.each( function(i) {
-        var src = jQuery(this).attr("src");
-        if ( src != undefined && src.indexOf(scrName) != -1 )
+    var module_params = localStorage.getItem('compare_params');
+    if ( module_params != undefined && module_params.length>0 )
+    {
+        var parts = module_params.split("&");
+        for ( var i=0;i<parts.length;i++ )
         {
-            var qStr = src.replace(/^[^\?]+\??/,'');
-            if ( qStr )
-            {
-                var pairs = qStr.split(/[;&]/);
-                for ( var i = 0; i < pairs.length; i++ )
-                {
-                    var keyVal = pairs[i].split('=');
-                    if ( ! keyVal || keyVal.length != 2 )
-                        continue;
-                    var key = unescape( keyVal[0] );
-                    var val = unescape( keyVal[1] );
-                    val = val.replace(/\+/g, ' ');
-                    params[key] = val;
-                }
-            }
-            return params;
+            var halves = parts[i].split("=");
+            if ( halves.length==2 )
+                params[halves[0]] = halves[1];
         }
-    });
+    }
+    else
+    {
+        var scripts = jQuery("script");
+        scripts.each( function(i) {
+            var src = jQuery(this).attr("src");
+            if ( src != undefined && src.indexOf(scrName) != -1 )
+            {
+                var qStr = src.replace(/^[^\?]+\??/,'');
+                if ( qStr )
+                {
+                    var pairs = qStr.split(/[;&]/);
+                    for ( var i = 0; i < pairs.length; i++ )
+                    {
+                        var keyVal = pairs[i].split('=');
+                        if ( ! keyVal || keyVal.length != 2 )
+                            continue;
+                        var key = unescape( keyVal[0] );
+                        var val = unescape( keyVal[1] );
+                        val = val.replace(/\+/g, ' ');
+                        params[key] = val;
+                    }
+                }
+                return params;
+            }
+        });
+    }
+    if ( !('docid' in params) )
+    {
+        var tabs_params = localStorage.getItem('tabs_params');
+        if ( tabs_params != undefined && tabs_params.length>0 )
+            params['docid'] = get_one_param(tabs_params,'docid');
+    }    
     return params;
 }
 /**
@@ -476,7 +506,7 @@ function get_args( scrName )
  */
 jQuery(document).ready(
     function(){
-        var params = get_args('compare');
+        var params = getCompareArgs('compare');
         new comparer(params['target'],
             params['docid'],params['modpath']);
     }

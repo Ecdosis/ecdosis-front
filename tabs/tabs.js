@@ -22,24 +22,17 @@ function tabbed(target,module,tabs,modules)
         var attr = jobj.attr(name);
         return (typeof attr !== typeof undefined && attr !== false);
     };
-    this.getParam = function( param, url ) {
-        if ( url.contains(param) )
+    this.getOneParam = function( params, name )
+    {
+        var parts = params.split("&");
+        for ( var i=0;i<parts.length;i++ )
         {
-            var pos1 = url.indexOf(param);
-            var rhs = url.substr(pos1);
-            var pos2 = rhs.indexOf("=");
-            if ( pos2 != -1 )
-            {
-                var value = rhs.substr(pos2+1);
-                var pos3 = value.indexOf("&");
-                if ( pos3 == -1 )
-                    return value;
-                else
-                    return value.substr(0,pos3); 
-            }
+            var halves = parts[i].split("=");
+            if ( halves.length==2 && halves[0]==name )
+                return halves[1];
         }
         return "";
-    };
+    }
     // now build the page
     var html = '<table id="tab-head">';
     html += '<tr>';
@@ -64,19 +57,15 @@ function tabbed(target,module,tabs,modules)
         {
             tab.click(function(event) {
                 var module = tab.attr("title");
-                var other_params = localStorage.getItem(module+'_params');
-                var docid = self.getParam('docid',location.href);
-                if ( other_params == null )
-                    other_params = 'docid='+docid;
-                else if ( !other_params.contains("docid") )
-                    other_params += 'docid='+docid;
-                localStorage.removeItem(module+'_params');
-                localStorage.setItem(module+'_params',other_params);
+                var other_params = localStorage.getItem(module+"_params");
+                var tabs_params = localStorage.getItem('tabs_params');
+                var docid = self.getOneParam(tabs_params,'docid');
                 var new_url = "http://"+window.location.hostname+window.location.pathname;
                 new_url += '?module='+module;
                 // add tabs and modules
                 if ( other_params != undefined && other_params.length>0 )
                     new_url += '&'+other_params;
+                new_url += "&docid="+docid;
                 location.assign(new_url);
             });
         }

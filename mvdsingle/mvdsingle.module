@@ -13,17 +13,25 @@ function mvdsingle_preprocess_page()
         /* don't include javascript or it gets loaded twice */
     }
 }
+function build_mvd_args()
+{
+    $args = "";
+    if ( array_key_exists ("target", $_GET) )
+        $args .= '&target='.$_GET["target"];
+    if ( array_key_exists ("version1", $_GET) )
+        $args .= '&version1='.$_GET["version1"];
+    if ( array_key_exists ("selections", $_GET) )
+        $args .= '&selections='.$_GET["selections"];
+    if ( strpos($args,'&')==0 )
+        $args = substr($args,1);
+    return $args;
+}
 function mvdsingle_all()
 {
     $mod_path = drupal_get_path('module', 'mvdsingle');
-    $src = $mod_path.'/mvdsingle.js?target=content';
-    if ( array_key_exists ("docid", $_GET) )
-        $src .= '&docid='.$_GET["docid"];
-    if ( array_key_exists ("version1", $_GET) )
-        $src .= '&version1='.$_GET["version1"];
-    if ( array_key_exists ("selections", $_GET) )
-        $src .= '&selections='.$_GET["selections"];
-    $html ='<script type="text/javascript" src="'.$src.'"></script>';
+    $args = build_mvd_args();
+    $src = $mod_path.'/mvdsingle.js?';
+    $html ='<script type="text/javascript" src="'.$src.$args.'"></script>';
     return $html;
 }
 function mvdsingle_menu()
@@ -77,11 +85,7 @@ function mvdsingle_block_view($delta = '')
     {
         case 'mvdsingle':
 	    $mod_path = drupal_get_path('module', 'mvdsingle');
-            $args = 'target=content&docid='.$_GET["docid"];
-            if ( array_key_exists ("version1", $_GET) )
-                $args .= '&version1='.$_GET["version1"];
-            if ( array_key_exists('selections', $_GET) )
-                $args .= '&selections='.$_GET['selections'];
+            $args = build_mvd_args();
             $block['content'] = '<script type="text/javascript" src="'
                 .$mod_path.'/js/mvdsingle.js?'.$args.'"></script>';
             return $block;
