@@ -1,0 +1,4 @@
+name = tabs
+description = Provdes a number of tabbed containers for other modules
+core = 7.x
+configure = admin/config/content/tabs

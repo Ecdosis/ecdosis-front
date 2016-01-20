@@ -1,0 +1,15 @@
+#tab-head {margin-top:10px;margin-bottom:10px;}
+.tab {
+  border-top:1px solid grey;
+  border-left:1px solid grey;
+  border-right:1px solid grey;
+  background-color:lightgrey;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:13px;
+  white-space:nowrap;
+  border-bottom: 1px solid grey;
+}
+#tab-final {width:100%;}
+#tab-selected {background-color:whitesmoke;border-bottom:1px solid whitesmoke}
+.tab:hover {cursor:pointer}
+#main {margin-top:0px !important}

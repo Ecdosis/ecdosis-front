@@ -1,0 +1,116 @@
+<?php
+function compose_tabs_params( $args )
+{
+    $mod_path = drupal_get_path('module', 'tabs');
+    $str = "target=content&tabs=single%20view,compare,tree%20view&modpath="
+        .$mod_path."&modules=mvdsingle,compare,tree";
+    for ( $i=0;$i<count($args);$i++ )
+    {
+        $parts = explode("=",$args[$i]);
+        if ( count($parts)==2 )
+        {
+            $key = $parts[0];
+            if ( strcmp($key,"module")==0
+                || strcmp($key,"modpath")==0
+                || strcmp($key,"tabs")==0 )
+            {
+                if ( strlen($str)>0 )
+                    $str .= '&';
+                $str .= $args[$i];
+            }
+        }
+    }
+    return $str;
+}
+function compose_mod_params( $args )
+{
+    $str = "target=tabs-content";
+    for ( $i=0;$i<count($args);$i++ )
+    {
+        $parts = explode("=",$args[$i]);
+        if ( count($parts)==2 )
+        {
+            $key = $parts[0];
+            if ( strcmp($key,"module")!=0 
+                && strcmp($key,"modpath")!=0
+                && strcmp($key,"modules")!=0
+                && strcmp($key,"tabs")!=0
+                && strcmp($key,"target")!=0 )
+            {
+                if ( strlen($str)>0 )
+                    $str .= '&';
+                $str .= $args[$i];
+            }
+        }
+    }
+    return $str;
+}
+function tabs_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"tabs") )
+    {
+        drupal_add_css(drupal_get_path('module','tabs').'/tabs.css','file');
+        $uri = request_uri();
+        $pos = strpos($uri,"?");
+        if ( $pos != -1 )
+        {
+            $rest = substr($uri,$pos+1);
+            $args = explode("&",$rest);
+            // pass js params via local storage
+            // first the tabs module itself
+            // these scripts will be executed in order
+            $tabs_path = drupal_get_path('module','tabs');
+            $tabs_script = $tabs_path.'/tabs.js';
+            $tabs_params = compose_tabs_params($args);
+            drupal_add_js(
+                "jQuery(document).ready(function (){localStorage.setItem('tabs_params','"
+                .$tabs_params."')})",'inline');
+            drupal_add_js($tabs_script,'file');
+            for ( $i=0;$i<count($args);$i++ )
+            {
+                $parts = explode("=",$args[$i]);
+                if ( count($parts)==2 )
+                {
+                    if ( $parts[0] == "module" )
+                    {
+                        // now include script for the current module within tabs
+                        $mod_path = drupal_get_path('module',$parts[1]);
+                        $mod_script = $mod_path.'/js/'.$parts[1].'.js';
+                        $mod_params = compose_mod_params($args);
+                        drupal_add_js(
+                            "jQuery(document).ready(function (){localStorage.setItem('"
+                            .$parts[1]."_params','"
+                            .$mod_params."')})",'inline');
+                        drupal_add_js($mod_script,'file');
+                        drupal_add_css($mod_path.'/css/'.$parts[1].'.css','file');
+                    }
+                }
+            }
+        }
+    }
+}
+function tabs_block_info() {
+  $blocks['tabs'] = array(
+    'info' => t('Provide a tabbed container for other moduless'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function tabs_help($path, $arg) {
+    switch ($path)
+    {
+        case "admin/help#tabs":
+            return '<p>' .
+                t("Tabbed container for other modules")
+                . '</p>';
+            break;
+    }
+}
+function tabs_block_view($delta = '') {
+  switch ($delta) {
+    case 'tabs':
+      $block['content'] = '';
+      return $block;
+  }
+}
+
