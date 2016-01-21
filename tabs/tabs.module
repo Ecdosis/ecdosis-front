@@ -1,9 +1,42 @@
 <?php
+function get_missing_tabset( $module )
+{
+    $tabset = NULL;
+    $extras = "dog";
+    $i = 1;
+    while ( $extras != NULL )
+    {
+       $extras = variable_get("tabs_params_".ordinal($i),NULL);
+       if ( $extras != NULL )
+       {
+           $params = explode("&",$extras);
+           for ( $j=0;$j<count($params);$j++ )
+           {
+               $parts = explode("=",$params[$j]);
+               if ( count($parts)==2 )
+               {
+                   if ( $parts[0]=='modules' )
+                   {
+                       if ( strpos($parts[1],$module)!= -1 )
+                       {
+                           $tabset = variable_get("tabs_key_".ordinal($i),NULL);
+                           $extras = NULL;
+                           break;
+                       }
+                   }
+               }
+           }
+       }
+       $i++;
+    }
+    return $tabset;
+}
 function compose_tabs_params( $args )
 {
     $mod_path = drupal_get_path('module', 'tabs');
-    $str = "target=content&tabs=single%20view,compare,tree%20view&modpath="
-        .$mod_path."&modules=mvdsingle,compare,tree";
+    $tabset = NULL;
+    $module = NULL;
+    $str = "target=content&modpath=".$mod_path;
     for ( $i=0;$i<count($args);$i++ )
     {
         $parts = explode("=",$args[$i]);
@@ -13,12 +46,41 @@ function compose_tabs_params( $args )
             if ( strcmp($key,"module")==0
                 || strcmp($key,"modpath")==0
                 || strcmp($key,"tabs")==0
+                || strcmp($key,"tabset")==0
                 || strcmp($key,"docid")==0 )
             {
+                if ( $key=="tabset" )
+                   $tabset = $parts[1];
+                if ( $key == "module" )
+                   $module = $parts[1];
                 if ( strlen($str)>0 )
                     $str .= '&';
                 $str .= urldecode($args[$i]);
             }
+        }
+    }
+    // supply the tabset if it is missing
+    if ( ($tabset == NULL||$tabset==undefined) && $module != NULL )
+    {
+        $tabset = get_missing_tabset( $module );
+    }
+    // get the extra params for this tabset
+    if ( $tabset != NULL )
+    {
+        $i=1;
+        $myparams="";
+        $mykey = "dog";
+        while ( $mykey != NULL )
+        {
+            $mykey = variable_get("tabs_key_".ordinal($i),NULL);
+            if ( $mykey != NULL && $mykey == $tabset )
+            {
+                $extras = variable_get("tabs_params_".ordinal($i),NULL);
+                if ( $extras != NULL )
+                    $str .= '&'.$extras;
+                break;
+            }
+            $i++;
         }
     }
     return $str;
@@ -37,7 +99,8 @@ function compose_mod_params( $args )
                 && strcmp($key,"modules")!=0
                 && strcmp($key,"tabs")!=0
                 && strcmp($key,"target")!=0
-                && strcmp($key,"docid")!=0 )
+                && strcmp($key,"docid")!=0 
+                && strcmp($key,"tabset")!=0 )
             {
                 if ( strlen($str)>0 )
                     $str .= '&';
@@ -129,4 +192,56 @@ function tabs_block_view($delta = '') {
           .'/tabs.js'.$tabs_params.'"></script>';
       return $block;
   }
+}
+/**
+ * Implements hook_menu(). Needed for config screen.
+ */
+function tabs_menu() {
+  $items = array();
+
+  $items['admin/config/content/tabs'] = array(
+    'title' => 'Tabs',
+    'description' => 'Configuration for tabs module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tabs_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  return $items;
+}
+function tabs_form($form, &$form_state)
+{
+    $n = variable_get('tabs_numpages',3);
+    if ( $n > 6 )
+        $n = 6;
+    elseif ( $n < 1 )
+        $n = 1;
+    $form['tabs_numpages'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of tab-arrays (1-6)'),
+        '#default_value' => $n,
+        '#size' => 2,
+        '#maxlength' => 2,
+        '#required' => TRUE
+    );
+    for ( $i=1;$i<=$n;$i++ )
+    {
+        $form['tabs_key_'.ordinal($i)] = array(
+        '#type' => 'textfield',
+        '#title' => t('Key'),
+        '#default_value' => variable_get('tabs_key_'.ordinal($i),'Index '.$i),
+        '#size' => 16,
+        '#maxlength' => 16,
+        '#required' => TRUE
+        );
+        $form['tabs_params_'.ordinal($i)] = array(
+        '#type' => 'textfield',
+        '#title' => t('Params'),
+        '#default_value' => variable_get('tabs_params_'.ordinal($i),'Url '.$i),
+        '#size' => 76,
+        '#maxlength' => 256,
+        '#required' =>TRUE
+        );
+    }
+    return system_settings_form($form);
 }

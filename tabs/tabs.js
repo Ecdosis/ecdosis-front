@@ -1,10 +1,11 @@
 /**
  * Tabbed container
  */
-function tabbed(target,module,tabs,modules)
+function tabbed(target,module,tabset,tabs,modules)
 {
     this.target = target;
     this.module = module;
+    this.tabset = tabset;
     this.tabs = tabs.split(",");
     this.modules = modules.split(",");
     var self = this;
@@ -61,7 +62,7 @@ function tabbed(target,module,tabs,modules)
                 var tabs_params = localStorage.getItem('tabs_params');
                 var docid = self.getOneParam(tabs_params,'docid');
                 var new_url = "http://"+window.location.hostname+window.location.pathname;
-                new_url += '?module='+module;
+                new_url += '?module='+module+'&tabset='+self.tabset;
                 // add tabs and modules
                 if ( other_params != undefined && other_params.length>0 )
                     new_url += '&'+other_params;
@@ -121,6 +122,6 @@ function getTabsArgs( scrName )
 jQuery(function(){
     // DOM Ready - do your stuff 
     var params = getTabsArgs('tabs');
-    var tabs = new tabbed(params['target'],params['module'],params['tabs'],params['modules']);
+    var tabs = new tabbed(params['target'],params['module'],params['tabset'],params['tabs'],params['modules']);
 }); 
 

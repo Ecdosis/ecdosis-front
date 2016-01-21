@@ -124,9 +124,10 @@ function treeviewer(target,docid)
             map['treegrows'] = treegrows;
             map['usebranchlengths'] = usebranchlengths;
             map['ancnodes'] = ancnodes;
+            localStorage.setItem('tree_params',self.mapToParams(map));
+            // add in the docid
             var tabs_params = self.paramsToMap(localStorage.getItem('tabs_params'));
             jQuery('#docid').val(unescape(tabs_params['docid']));
-            localStorage.setItem('tree_params',self.mapToParams(map));
             return true;
         });        
     });
