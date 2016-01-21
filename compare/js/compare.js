@@ -505,10 +505,15 @@ function getCompareArgs( scrName )
  * Load the compare tool with three arguments
  */
 jQuery(document).ready(
-    function(){
-        var params = getCompareArgs('compare');
-        new comparer(params['target'],
-            params['docid'],params['modpath']);
+    function() {
+        if(typeof(Storage) === "undefined") {
+            alert("this page requires HTML5 web storage");
+        }
+        else {
+            var params = getCompareArgs('compare');
+            new comparer(params['target'],
+                params['docid'],params['modpath']);
+        }
     }
 );
 

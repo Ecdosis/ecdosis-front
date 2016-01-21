@@ -255,8 +255,13 @@ function getMVDArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    // DOM Ready - do your stuff 
-    var params = getMVDArgs('mvdsingle');
-    var viewer = new mvdsingle(params['target'],params['docid'], 
-    params['version1'],params['selections']);
+    if(typeof(Storage) === "undefined") {
+        alert("this page requires HTML5 web storage");
+    }
+    else
+    {    
+        var params = getMVDArgs('mvdsingle');
+        var viewer = new mvdsingle(params['target'],params['docid'], 
+        params['version1'],params['selections']);
+    }
 }); 

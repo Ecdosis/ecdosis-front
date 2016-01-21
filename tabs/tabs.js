@@ -120,8 +120,13 @@ function getTabsArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    // DOM Ready - do your stuff 
-    var params = getTabsArgs('tabs');
-    var tabs = new tabbed(params['target'],params['module'],params['tabset'],params['tabs'],params['modules']);
+    if(typeof(Storage) === "undefined") {
+        alert("this page requires HTML5 web storage");
+    }
+    else
+    {
+        var params = getTabsArgs('tabs');
+        var tabs = new tabbed(params['target'],params['module'],params['tabset'],params['tabs'],params['modules']);
+    }
 }); 
 

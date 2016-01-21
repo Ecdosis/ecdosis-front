@@ -70,15 +70,15 @@ function treeviewer(target,docid)
             +'<td>tree grows</td><td>tree style</td>'
             +'<td>use branch lengths</td><td>ancestral nodes</td><td></td></tr>'
             +'<tr><td><select name="treegrows" id="treegrows">'
-            +'<option>horizontal</option><option>vertical</option></select></td>'
+            +'<option selected>horizontal</option><option>vertical</option></select></td>'
             +'<td><select name="treestyle" id="treestyle">'
             +'<option>cladogram</option><option>phenogram</option>'
             +'<option>curvogram</option><option>eurogram</option>'
-            +'<option value="circular">circular</option><option>swoopogram</option></select></td>'
+            +'<option value="circular">circular</option><option selected>swoopogram</option></select></td>'
             +'<td><select name="usebranchlengths" id="usebranchlengths">'
-            +'<option>yes</option><option>no</option></select></td>'
+            +'<option>yes</option><option selected>no</option></select></td>'
             +'<td><select name="ancnodes" id="ancnodes">'
-            +'<option>weighted</option><option>intermediate</option>'
+            +'<option selected>weighted</option><option>intermediate</option>'
             +'<option>centered</option><option>inner</option></select></td>'
             +'<td><input type="submit" value="redraw"></input>'
             +'<input type="hidden" name="docid" value="'+docid+'"></input>'
@@ -197,8 +197,12 @@ function getTreeArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    // DOM Ready - do your stuff 
-    var params = getTreeArgs('tree');
-    var viewer = new treeviewer(params['target'],params['docid']);
+    if(typeof(Storage) === "undefined") {
+        alert("this page requires HTML5 web storage");
+    }
+    else {
+        var params = getTreeArgs('tree');
+        var viewer = new treeviewer(params['target'],params['docid']);
+    }
 }); 
 
