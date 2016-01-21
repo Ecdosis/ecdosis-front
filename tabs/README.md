@@ -8,10 +8,14 @@ Tabs are:
 
 * tabset -- the name of the set of modules to embed. This key is stored as a 
 setting in Drupal, and provides url parameters specific to that tabset. 
-* modules -- a comma-separated list of Drupal modules 
-* tabs -- a comma-separated list of tab names, the same length as modules 
 * module -- the currently selected module (and hence the corresponding tab)
 * docid -- the document to display in each of the tabs
+* modules -- a comma-separated list of Drupal modules 
+* tabs -- a comma-separated list of tab names, the same length as modules 
+
+Usually only the first three parameters are needed, or just module and 
+docid, since the other parameters are supplied automatically from the 
+Druapl settings.
 
 ### Customising embedded tab-modules
 The modules must be written so that they take a 'target' parameter. This 
