@@ -29,7 +29,7 @@ Drupal 'content' element to embed itself. The url parameters used to
 invoke tabs are divided into two sets: those specific to the currently 
 selected module and those specific to the tabs module. Both sets of 
 parameters are stored in browser local storage under the key 
-'tabs_params', and '<module_name>_params'. So the tree module specific 
+'tabs_params', and '&lt;module_name&gt;_params'. So the tree module specific 
 params would be stored under tree_params. 
 
 If the user clicks on a new 
@@ -67,7 +67,7 @@ would otherwise get out of sync between tab modules.
 The tabs and modules for a particular instance of tabs can be set by 
 configuring the tabs module in Drupal. The key is the name of the tabset 
 and the specified parametes will be added to a url invocation of tabs 
-with the parameter tabset=<key>. If a module belonging to a particular 
+with the parameter tabset=&lt;key&gt;. If a module belonging to a particular 
 tabset is provided, but not the tabset parameter, this is added 
 automatically. This allows modules to have no knowledge of which tabset 
 they belong to.
