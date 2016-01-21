@@ -1,3 +1,5 @@
-#tree {display:block;width: 50%;margin-left:auto;margin-right:auto}
+#tree {display:block;width: 50%;height:auto;margin-left:auto;margin-right:auto;}
 #tree-title {font-weight: bold; font-size:2.0em; text-align:center; margin-bottom:0px}
 #tree-footer td {padding: 0px 0px 0px 0px}
+#filler-top {height:100%}
+#filler-bottom {height:100%}

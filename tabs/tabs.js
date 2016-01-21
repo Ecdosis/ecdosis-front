@@ -65,7 +65,7 @@ function tabbed(target,module,tabs,modules)
                 // add tabs and modules
                 if ( other_params != undefined && other_params.length>0 )
                     new_url += '&'+other_params;
-                new_url += "&docid="+docid;
+                new_url += "&docid="+unescape(docid);
                 location.assign(new_url);
             });
         }

@@ -17,7 +17,7 @@ function compose_tabs_params( $args )
             {
                 if ( strlen($str)>0 )
                     $str .= '&';
-                $str .= $args[$i];
+                $str .= urldecode($args[$i]);
             }
         }
     }
@@ -115,10 +115,18 @@ function tabs_block_view($delta = '') {
   switch ($delta) {
     case 'tabs':
       $block['subject'] = t('Provide tabbed container');
-      $args = compose_tabs_params();
+      $uri = request_uri();
+      $pos = strpos($uri,"?");
+      $tabs_params = "";
+      if ( $pos != -1 )
+      {
+          $rest = substr($uri,$pos+1);
+          $args = explode("&",$rest);
+          $tabs_params = "?"+compose_tabs_params($args);
+      }
       $mod_path = drupal_get_path('module', 'compare');
       $block['content'] = '<script type="text/javascript" src="'.$mod_path
-          .'/tabs.js?'.$args.'"></script>';
+          .'/tabs.js'.$tabs_params.'"></script>';
       return $block;
   }
 }

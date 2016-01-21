@@ -7,6 +7,37 @@ function treeviewer(target,docid)
     this.target = target;
     this.docid = docid;
     var self = this;
+    /**
+     * Convert a list of http params to a map
+     * @return an associative array with keys, values
+     */
+    this.paramsToMap = function(params) {
+        var items = params.split("&");
+        var map = new Object();
+        for ( var i=0;i<items.length;i++ )
+        {
+            var halves = items[i].split("=");
+            if ( halves.length==2 )
+                map[halves[0]] = halves[1];
+        }
+        return map;
+    };
+    /**
+     * Convert a map of key value pairs to a list of http params
+     * @param map an associative array
+     * @return a string
+     */
+    this.mapToParams = function(map) {
+        var str = "";
+        for (var key in map) 
+        {
+            var value = map[key];
+            if ( str.length>0 )
+                str += "&";
+            str += key+"="+value;
+        }
+        return str;
+    };
     if ( docid == undefined || docid.length==0 )
     {
         docid = localStorage.getItem('docid');
@@ -14,10 +45,12 @@ function treeviewer(target,docid)
     var url = "http://"+window.location.hostname+'/tree/title?docid='+docid;
     jQuery.get(url,function(data) {
         var src = "http://"+window.location.hostname+"/tree/";
-        var treetype = localStorage.getItem('treetype');
-        var treegrows = localStorage.getItem('treegrows');
-        var usebranchlengths = localStorage.getItem('usebranchlengths');
-        var ancnodes = localStorage.getItem('ancnodes');
+        var tree_params = localStorage.getItem('tree_params');
+        var tree_map = self.paramsToMap(tree_params);
+        var treetype = tree_map['treestyle'];
+        var treegrows = tree_map['treegrows'];
+        var usebranchlengths = tree_map['usebranchlengths'];
+        var ancnodes = tree_map['ancnodes'];
         src += '?docid='+docid;
         if ( treetype != undefined )
             src += '&treestyle='+treetype;
@@ -49,6 +82,7 @@ function treeviewer(target,docid)
             +'<option>centered</option><option>inner</option></select></td>'
             +'<td><input type="submit" value="redraw"></input>'
             +'<input type="hidden" name="docid" value="'+docid+'"></input>'
+            +'<input type="hidden" name="module" value="tree"></input>'
             +'</td></tr></table>';
         jQuery("#treeform").append(content);
         if ( treetype != undefined )
@@ -79,23 +113,20 @@ function treeviewer(target,docid)
                 jQuery(this).attr("selected","selected");
             });
         }
-        // adjust height of tree
-        var wHeight = jQuery(window).height();
-        var titleTop = jQuery("#tree-title").offset().top;
-        var titleHeight = jQuery("#tree-title").height();
-        var footerHeight = jQuery("#tree-footer").height();
-        jQuery("#tree").height(Math.round(wHeight-(20+titleTop+titleHeight+footerHeight)));
         jQuery('#treeform').submit(function() {
             var treetype=jQuery("#treestyle").val();
             var treegrows=jQuery("#treegrows").val();
             var usebranchlengths=jQuery("#usebranchlengths").val();
             var ancnodes=jQuery("#ancnodes").val();
-            var localdocid = jQuery('[name="docid"]').val();
-            localStorage.setItem('treetype', treetype);
-            localStorage.setItem('treegrows', treegrows);
-            localStorage.setItem('usebranchlengths', usebranchlengths);
-            localStorage.setItem('ancnodes', ancnodes);
-            localStorage.setItem('docid',localdocid);
+            var tree_params = localStorage.getItem('tree_params');
+            var map = self.paramsToMap(tree_params);
+            map['treetype']= treetype;
+            map['treegrows'] = treegrows;
+            map['usebranchlengths'] = usebranchlengths;
+            map['ancnodes'] = ancnodes;
+            var tabs_params = self.paramsToMap(localStorage.getItem('tabs_params'));
+            jQuery('#docid').val(unescape(tabs_params['docid']));
+            localStorage.setItem('tree_params',self.mapToParams(map));
             return true;
         });        
     });
