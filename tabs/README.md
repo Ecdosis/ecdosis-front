@@ -17,7 +17,10 @@ Usually only the first three parameters are needed, or just module and
 docid, since the other parameters are supplied automatically from the 
 Druapl settings. .htaccess can also be set to translate direct calls to 
 the module and docid (without an invocation of tabs) into a call to 
-tabs.
+tabs. An example for mvdsingle is:
+
+    RewriteRule ^mvdsingle?(.*)$ /harpur/tabs?$1module=mvdsingle&tabset=view [R=301,L,QSA]
+ 
 
 ### Customising embedded tab-modules
 The modules must be written so that they take a 'target' parameter. This 
