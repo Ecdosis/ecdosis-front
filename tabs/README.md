@@ -37,17 +37,17 @@ tab, these parameters are used to compose a url, updated with the new
 module's name.
 
 If the same module is resubmitted due to a change in its settings, the 
-module-specific parameterts are retrieved, updated with new values, and 
+module-specific parameters are retrieved, updated with new values, and 
 a new url composed that will pass through the tabs module back to the 
 same module.
 
 The usual read_args function, which used to read "arguments" to 
-javascript invocations by scanning the HTML doesn't work since the 
-scripts must be run before the page in ready. Since drupal_add_js does 
-not pass parameters in this way another mechanism had to be devised, 
-which is the use of local storage described above. The mvdsingle, tree 
-and compare modules have been adjusted to use this form of parameter 
-storage.
+javascript invocations by scanning the HTML doesn't work with tabs, 
+since the scripts must be specified before the page in ready. Since 
+drupal_add_js does not pass parameters in this way another mechanism had 
+to be devised, which is the use of local storage described above. The 
+mvdsingle, tree and compare modules have been adjusted to use this form 
+of parameter storage.
 
 ### Order of execution
 The Tabs module first saves its own parameters to browser memory by adding a 
@@ -55,19 +55,20 @@ script to the head section of the page before it is fully loaded (via
 tabs_preprocess_page). It then embeds itself, then the parameters for the 
 current module and finally the embedded module's script. This ensures the 
 correct order of execution. It does, however, mean that the entire page will 
-reload every time the user clicks on a new tab. But the delay is 
+reload every time the user clicks on a new tab, although the delay is 
 imperceptible.
 
 ### Docid
-The docid is saved with the tabs_params, and must be read in separately by 
-each module and added to its own parameters. This is because it is shared and
-would otherwise get out of sync between tab modules.
+The docid is saved with the tabs_params, and must be read in separately 
+by each module (if not provided via the url) and added to its own 
+parameters. This is because it is shared and would otherwise get out of 
+sync between tab modules.
 
 ### Tabsets
 The tabs and modules for a particular instance of tabs can be set by 
 configuring the tabs module in Drupal. The key is the name of the tabset 
-and the specified parametes will be added to a url invocation of tabs 
-with the parameter tabset=&lt;key&gt;. If a module belonging to a particular 
-tabset is provided, but not the tabset parameter, this is added 
-automatically. This allows modules to have no knowledge of which tabset 
-they belong to.
+and the specified parameters will be added to a url invocation of tabs 
+with the parameter tabset=&lt;key&gt;. If a module belonging to a 
+particular tabset is provided, but not the tabset parameter, this will 
+be added automatically by the tabs module. This allows modules to have 
+no knowledge of which tabset they belong to.
