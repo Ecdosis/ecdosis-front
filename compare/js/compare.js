@@ -437,6 +437,7 @@ function comparer( target, docid, modpath )
         this.getVersion1();
     };
     this.build();
+    jQuery("#"+self.target).css("visibility","visible");
 }
 function get_one_param( params, name )
 {
@@ -511,6 +512,7 @@ jQuery(document).ready(
         }
         else {
             var params = getCompareArgs('compare');
+            jQuery("#"+params['mod-target']).css("visibility","hidden");
             new comparer(params['mod-target'],
                 params['docid'],params['modpath']);
         }

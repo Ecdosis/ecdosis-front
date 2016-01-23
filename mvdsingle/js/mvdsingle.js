@@ -145,6 +145,7 @@ function mvdsingle(target,docid,version1,selections)
             jQuery("#body").contents().remove();
             jQuery("#body").append(response);
             self.getVersionMetadata();
+            jQuery("#"+self.target).css("visibility","visible");
         });
     };
     /**
@@ -261,6 +262,7 @@ jQuery(function(){
     else
     {    
         var params = getMVDArgs('mvdsingle');
+        var t = jQuery("#"+params['mod-target']).css("visibility","hidden");
         var viewer = new mvdsingle(params['mod-target'],params['docid'], 
         params['version1'],params['selections']);
     }

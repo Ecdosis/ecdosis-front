@@ -113,6 +113,7 @@ function treeviewer(target,docid)
                 jQuery(this).attr("selected","selected");
             });
         }
+        jQuery("#"+self.target).css("visibility","visible");
         jQuery('#treeform').submit(function() {
             var treetype=jQuery("#treestyle").val();
             var treegrows=jQuery("#treegrows").val();
@@ -202,6 +203,7 @@ jQuery(function(){
     }
     else {
         var params = getTreeArgs('tree');
+        jQuery("#"+params['mod-target']).css("visibility","hidden");
         var viewer = new treeviewer(params['mod-target'],params['docid']);
     }
 }); 

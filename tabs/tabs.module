@@ -282,7 +282,6 @@ function tabs_help($path, $arg) {
 function tabs_block_view($delta = '') {
   switch ($delta) {
     case 'tabs':
-      $block['subject'] = t('Provide tabbed container');
       $uri = request_uri();
       $pos = strpos($uri,"?");
       $tabs_params = "";
