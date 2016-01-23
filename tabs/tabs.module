@@ -1,116 +1,229 @@
 <?php
+/**
+ * Convert a string of uri parameters separated by "&" to a key value array
+ * @param $params the paramters as a uri string
+ * @param &$args a reference to the key-value array being built
+ */
+function params_to_array( $params, &$args )
+{
+    $parts = explode("&",$params);
+    for ( $i=0;$i<count($parts);$i++ )
+    {
+        $halves = explode("=",$parts[$i]);
+        if ( count($halves)==2 )
+        {
+            if ( !is_null($halves[1])&& !is_null($halves[0]) )
+                $args[$halves[0]] = urldecode($halves[1]);
+        }
+    }
+}
+/**
+ * Turn a key-value array of parameters into a parameter string
+ * @param &$args the key-value array of parameters
+ * @return the paremtetrs as a string not preceded by "?"
+ */
+function array_to_params( &$args )
+{
+    $params = "";
+    foreach ( $args as $key => $value )
+    {
+        if ( strlen($params)>0 )
+            $params .= "&";
+        $params .= $key . '=' . urlencode($value);
+    }
+    return $params;
+}
+/**
+ * Get the extra parameters from the Drupal settings for this tabset
+ * @param $tabset the key for the desired tabset
+ * @param &$args reference to the parameters being built
+ */
+function get_tabset_params( $tabset, &$args )
+{
+    $i=1;
+    $key;
+    do
+    {
+        $key = variable_get("tabs_key_".ordinal($i),NULL);
+        if ( $key != NULL && $key == $tabset )
+        {
+            $extras = variable_get("tabs_params_".ordinal($i),NULL);
+            if ( $extras != NULL )
+                params_to_array( $extras, $args );
+            break;
+        }
+        $i++;
+    } while ( $key != NULL );
+}
+/**
+ * Get the correct tabset name for a particular module
+ * @param $module the module to search for
+ * @return the name of the first tabset it occurs in OR null
+ */
 function get_missing_tabset( $module )
 {
     $tabset = NULL;
-    $extras = "dog";
+    $extras;
     $i = 1;
-    while ( $extras != NULL )
+    do
     {
        $extras = variable_get("tabs_params_".ordinal($i),NULL);
        if ( $extras != NULL )
        {
-           $params = explode("&",$extras);
-           for ( $j=0;$j<count($params);$j++ )
+           $args = array();
+           params_to_array($extras,$args);
+           $modules = $args['modules'];
+           if ( !is_null($modules) )
            {
-               $parts = explode("=",$params[$j]);
-               if ( count($parts)==2 )
+               $parts = explode(",",$modules);
+               for ( $j=0;$j<count($parts);$j++ )
                {
-                   if ( $parts[0]=='modules' )
+                   if ( strpos($parts[$j],$module)==0 )
                    {
-                       if ( strpos($parts[1],$module)!= -1 )
-                       {
-                           $tabset = variable_get("tabs_key_".ordinal($i),NULL);
-                           $extras = NULL;
-                           break;
-                       }
+                        $tabset = variable_get("tabs_key_".ordinal($i),NULL);
+                        $extras = NULL;
+                        break;
                    }
                }
            }
        }
        $i++;
     }
+    while ( $extras != NULL );
     return $tabset;
 }
-function compose_tabs_params( $args )
+/**
+ * Build the tabs specific parameters from various sources
+ * @param &$args reference to the parameters array beuing built
+ * @return the paremeters as a string, separated by "&" (no leading ?)
+ */
+function compose_tabs_params( &$args )
 {
     $mod_path = drupal_get_path('module', 'tabs');
-    $tabset = NULL;
-    $module = NULL;
-    $str = "target=content&modpath=".$mod_path;
-    for ( $i=0;$i<count($args);$i++ )
+    $args['target'] = 'content';
+    $args['modpath'] = $mod_path;
+    if ( array_key_exists('tabset',$args) )
     {
-        $parts = explode("=",$args[$i]);
-        if ( count($parts)==2 )
+        get_tabset_params($args['tabset'],$args);
+        if ( !array_key_exists('module',$args) && array_key_exists('modules',$args) )
         {
-            $key = $parts[0];
-            if ( strcmp($key,"module")==0
-                || strcmp($key,"modpath")==0
-                || strcmp($key,"tabs")==0
-                || strcmp($key,"tabset")==0
-                || strcmp($key,"docid")==0 )
-            {
-                if ( $key=="tabset"&&isset($part[1]) )
-                {
-                   $tabset = $parts[1];
-                }
-                if ( $key == "module" )
-                   $module = $parts[1];
-                if ( strlen($str)>0 )
-                    $str .= '&';
-                $str .= urldecode($args[$i]);
-            }
+            $args['module'] = get_one_module($args['modules'],0);
         }
     }
-    // supply the tabset if it is missing
-    if ( is_null($tabset) && $module != NULL )
+    else if ( array_key_exists('module',$args) )
     {
-        $tabset = get_missing_tabset( $module );
+        $args['tabset'] = get_missing_tabset( $args['module'] );
+        get_tabset_params($args['tabset'],$args);
     }
-    // get the extra params for this tabset
-    if ( $tabset != NULL )
-    {
-        $i=1;
-        $myparams="";
-        $mykey = "dog";
-        while ( $mykey != NULL )
-        {
-            $mykey = variable_get("tabs_key_".ordinal($i),NULL);
-            if ( $mykey != NULL && $mykey == $tabset )
-            {
-                $extras = variable_get("tabs_params_".ordinal($i),NULL);
-                if ( $extras != NULL )
-                    $str .= '&'.$extras;
-                break;
-            }
-            $i++;
-        }
-    }
-    return $str;
+    return array_to_params($args);
 }
-function compose_mod_params( $args )
+/**
+ * Build the module-specific parameters from various sources
+ * @param &$args reference to the parameters being built
+ * @param $mod_spec name of module (possibly with params)
+ * @return the parameters as a string, separated by "&" (no leading ?)
+ */
+function compose_mod_params( &$args, $mod_spec )
 {
-    $str = "target=tabs-content";
-    for ( $i=0;$i<count($args);$i++ )
+    $args['mod-target'] = 'tabs-content';
+    $local_params = get_mod_params($mod_spec);   
+    if ( $local_params != NULL )
     {
-        $parts = explode("=",$args[$i]);
-        if ( count($parts)==2 )
+        params_to_array($local_params,$args);
+    }
+    return array_to_params($args);
+}
+/**
+ * Get one module from a comma-separated list of modules
+ * @param $modules the list of modules
+ * @param $index the index in the list
+ * @return the module spec at $index
+ */
+function get_one_module($modules,$index)
+{
+    $parts = explode(",",$modules);
+    if ( count($parts)>$index )
+    {
+        return $parts[$index];
+    }
+    return "";
+}
+/**
+ * Add parameters stripped from a raw uri
+ * @param &$params reference to an array to be built
+ * @param $uri the uri to be stripped
+ * @param $inclusions array of parameter keys that must be included
+ * @param $exclusions array of parameter names that must be excluded
+ */
+function add_uri_params( &$params, $uri, $inclusions, $exclusions )
+{
+    $pos = strpos($uri,"?");
+    if ( $pos !== FALSE )
+    {
+        $rest = substr($uri,$pos+1);
+        $args = explode("&",$rest);
+        for ( $i=0;$i<count($args);$i++ )
         {
-            $key = $parts[0];
-            if ( strcmp($key,"module")!=0 
-                && strcmp($key,"modpath")!=0
-                && strcmp($key,"modules")!=0
-                && strcmp($key,"tabs")!=0
-                && strcmp($key,"target")!=0
-                && strcmp($key,"docid")!=0 
-                && strcmp($key,"tabset")!=0 )
+            $halves = explode("=",$args[$i]);
+            if ( count($halves)==2 )
             {
-                if ( strlen($str)>0 )
-                    $str .= '&';
-                $str .= $args[$i];
+                if ( (empty($exclusions) && in_array($halves[0],$inclusions)) 
+                   || (empty($inclusions)&&!in_array($halves[0],$exclusions)) )
+                {
+                    if ( $halves[1] != "undefined" && strlen($halves[1])>0 )
+                        $params[$halves[0]] = urldecode($halves[1]);
+                }
             }
         }
     }
-    return $str;
+}
+/**
+ * Get the raw module name sans arguments
+ * @param $mdoule the full module spec
+ * @return the name of the module without arguments
+ */
+function get_mod_name( $module )
+{
+    if ( strpos($module,"?") !== FALSE )
+    {
+        $parts = explode("?",$module);
+        return $parts[0];
+    }
+    else
+        return $module;
+}
+/**
+ * Get the parameters of a module spec
+ * @param $module the full module spec
+ * @return the parameters of the module or NULL
+ */
+function get_mod_params( $module )
+{
+    if ( strpos($module,"?") !== FALSE )
+    {
+        $parts = explode("?",$module);
+        if ( count($parts)==2 && !is_null($parts[1]) )
+            return $parts[1];
+    }
+    else
+        return NULL;
+}
+/**
+ * Get the module name from the argument list or elsewhere
+ * @param &$args reference to the tabs params array
+ * @return the the module spec or NULL
+ */
+function get_module(&$args)
+{
+    if ( array_key_exists('module',$args) )
+        return $args['module'];
+    else if ( array_key_exists('modules',$args) )
+    {
+        $modules = $args['modules'];
+        return get_one_module($modules,0);
+    }
+    else
+        return NULL;
 }
 function tabs_preprocess_page(&$vars)
 {
@@ -120,44 +233,33 @@ function tabs_preprocess_page(&$vars)
     else if ( strpos(request_uri(),"tabs") )
     {
         drupal_add_css(drupal_get_path('module','tabs').'/tabs.css','file');
-        $uri = request_uri();
-        $pos = strpos($uri,"?");
-        if ( $pos != -1 )
-        {
-            $rest = substr($uri,$pos+1);
-            $args = explode("&",$rest);
-            // pass js params via local storage
-            // first the tabs module itself
-            // these scripts will be executed in order
-            $tabs_path = drupal_get_path('module','tabs');
-            $tabs_script = $tabs_path.'/tabs.js';
-            $tabs_params = compose_tabs_params($args);
-            drupal_add_js(
-                "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
-                ."{alert('this page requires HTML5 web storage');}else"
-                ."{localStorage.setItem('tabs_params','".$tabs_params."')}})",'inline');
-            drupal_add_js($tabs_script,'file');
-            for ( $i=0;$i<count($args);$i++ )
-            {
-                $parts = explode("=",$args[$i]);
-                if ( count($parts)==2 )
-                {
-                    if ( $parts[0] == "module" )
-                    {
-                        // now include script for the current module within tabs
-                        $mod_path = drupal_get_path('module',$parts[1]);
-                        $mod_script = $mod_path.'/js/'.$parts[1].'.js';
-                        $mod_params = compose_mod_params($args);
-                        drupal_add_js(
-                            "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
-                            ."{alert('this page requires HTML5 web storage');}else"
-                            ."{localStorage.setItem('".$parts[1]."_params','".$mod_params."')}})",'inline');
-                        drupal_add_js($mod_script,'file');
-                        drupal_add_css($mod_path.'/css/'.$parts[1].'.css','file');
-                    }
-                }
-            }
-        }
+        $tabs_params = array();
+        $mod_params = array();
+        $tab_includes = array("module","modpath","modules","tabs","target","docid","tabset");
+        $empty = array();
+        add_uri_params($tabs_params,request_uri(),$tab_includes,$empty);
+        add_uri_params($mod_params,request_uri(),$empty,$tab_includes);
+        // invoke tabs
+        $tabs_path = drupal_get_path('module','tabs');
+        $tabs_script = $tabs_path.'/tabs.js';
+        $tabs_uri_params = compose_tabs_params($tabs_params);
+        drupal_add_js(
+            "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
+            ."{alert('this page requires HTML5 web storage');}else"
+            ."{localStorage.setItem('tabs_params','".$tabs_uri_params."')}})",'inline');
+        drupal_add_js($tabs_script,'file');
+        // invoke module
+        $mod_spec = get_module($tabs_params);
+        $mod_name = get_mod_name($mod_spec);
+        $mod_path = drupal_get_path('module',$mod_name);
+        $mod_script = $mod_path.'/js/'.$mod_name.'.js';
+        $mod_uri_params = compose_mod_params($mod_params,$mod_spec);
+        drupal_add_js(
+            "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
+            ."{alert('this page requires HTML5 web storage');}else"
+            ."{localStorage.setItem('".$mod_name."_params','".$mod_uri_params."')}})",'inline');
+        drupal_add_js($mod_script,'file');
+        drupal_add_css($mod_path.'/css/'.$mod_name.'.css','file');
     }
 }
 function tabs_block_info() {

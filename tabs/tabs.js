@@ -6,7 +6,7 @@ function tabbed(target,module,tabset,tabs,modules)
     this.target = target;
     this.module = module;
     this.tabset = tabset;
-    this.tabs = tabs.split(",");
+    this.tabs = tabs.replace(/\+/g," ").split(",");
     this.modules = modules.split(",");
     var self = this;
     /**
@@ -34,6 +34,32 @@ function tabbed(target,module,tabset,tabs,modules)
         }
         return "";
     }
+    this.paramsToObj = function(params,obj) {
+        if ( params != null )
+        {
+            var args = params.split("&");
+            for ( var i=0;i<args.length;i++ )
+            {
+                var halves = args[i].split("=");
+                if ( halves.length==2 )
+                    obj[halves[0]] = halves[1];
+            }
+        }
+        return obj;
+    };
+    this.objToParams = function(obj) {
+        var keys = Object.keys(obj);
+        var str = "";
+        for ( var i=0;i<keys.length;i++ )
+        {
+            if ( str.length>0 )
+                str += "&";
+            str += keys[i];
+            str += "=";
+            str += escape(obj[keys[i]]);
+        }
+        return str;
+    };
     // now build the page
     var html = '<table id="tab-head">';
     html += '<tr>';
@@ -57,20 +83,34 @@ function tabbed(target,module,tabset,tabs,modules)
         if ( !self.hasAttr(tab,"id") || tab.attr("id") != "tab-final" )
         {
             tab.click(function(event) {
-                var module = tab.attr("title");
-                var other_params = localStorage.getItem(module+"_params");
+                var mod_spec = jQuery(this).attr("title");
+                var mod_name = "";
+                var obj = new Object();
+                // get stale params from local storage
+                var other_params = localStorage.getItem(mod_name+"_params");
+                obj = self.paramsToObj(other_params,obj);
+                // refresh with curently seleted params in mod_spec if present
+                var extra_params="";
+                var extra_index = mod_spec.indexOf("?");
+                if ( extra_index!=-1 )
+                {
+                    extra_params = mod_spec.substring(extra_index+1);
+                    obj = self.paramsToObj(extra_params,obj);
+                    mod_name = mod_spec.substring(0,extra_index);
+                }
                 var tabs_params = localStorage.getItem('tabs_params');
                 var docid = self.getOneParam(tabs_params,'docid');
                 var new_url = "http://"+window.location.hostname+window.location.pathname;
-                new_url += '?module='+module+'&tabset='+self.tabset;
-                // add tabs and modules
-                if ( other_params != undefined && other_params.length>0 )
-                    new_url += '&'+other_params;
-                new_url += "&docid="+unescape(docid);
+                obj['module'] = mod_spec;
+                obj['tabset'] = self.tabset;
+                if ( docid.length>0 )
+                    obj['docid'] = unescape(docid);
+                new_url += "?"+self.objToParams(obj);
                 location.assign(new_url);
             });
         }
     });
+    t.css("visibility","visible");
 }
 /**
  * This reads the "arguments" to the javascript file
@@ -87,7 +127,7 @@ function getTabsArgs( scrName )
         {
             var halves = parts[i].split("=");
             if ( halves.length==2 )
-                params[halves[0]] = halves[1];
+                params[halves[0]] = unescape(halves[1]);
         }
     }
     else
@@ -126,7 +166,9 @@ jQuery(function(){
     else
     {
         var params = getTabsArgs('tabs');
+        var t = jQuery("#"+params['target']);
+        if ( t != undefined )
+            t.css("visibility","hidden");
         var tabs = new tabbed(params['target'],params['module'],params['tabset'],params['tabs'],params['modules']);
     }
 }); 
-

@@ -1,92 +1,109 @@
-(function ($) {
-function prepareList(listid) {
-    $('#'+listid).find('li:has(ul)')
-    .click( function(event) {
-        if (this == event.target) {
-            $(this).toggleClass('expanded');
-            $(this).children('ul').toggle('medium');
-        }
-        return true;
-    })
-    .addClass('collapsed')
-    .children('ul').hide();
-};
-function preparePartialList( listId )
+/**
+ * A browsable list with expansion/contraction
+ */
+function browse( target, listid ) 
 {
-    $('#'+listId).find('li:has(a)')
-    .click( function(event) {
-        if (this.children[0] == event.target
-            || this == event.target ) {
-            var subList = $(this).find('ul');
-            if ( subList != undefined && subList.length==0 )
-            {
-                var ul = httpGet(this.children[0].getAttribute("href"));
-                $(this).append(ul);
-                $(this).toggleClass('expanded');
+    this.listid = listid;
+    this.target = target;
+    var self = this;
+    /**
+     * Prepare the list for expansion
+     */
+    this.prepareList = function() {
+        jQuery('#'+self.target).find('li:has(ul)')
+        .click( function(event) {
+            if (this == event.target) {
+                jQuery(this).toggleClass('expanded');
+                jQuery(this).children('ul').toggle('medium');
             }
-            else
-            {
-                $(this).toggleClass('expanded');
-                $(this).children('ul').toggle('fast');
-            }
-            return false;
-        }
-        else
             return true;
-    })
-    .addClass('collapsed')
-    .children('ul').hide();
-}
-function httpGet(theUrl)
-{
-    var xmlHttp = null;
-    xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", theUrl, false );
-    if ( xmlHttp.readyState==1 )
-        xmlHttp.send( null );
-    return xmlHttp.responseText;
-}
-function panelIdFromUrl( url )
-{
-    var li = url.lastIndexOf("/");
-    if ( li != -1 )
-        return url.substring(li+1,url.length-1)+"Index";
-    else
-	return "titleIndex";
-}
-$(function(){
-    var tabs = $("#tabs li a");
-    var id0 = tabs.attr("href");
-    var url0 = $(id0).attr("title");
-    var tab0text = httpGet(url0);
-    $(id0).append( tab0text );
-    $("#tabs").tabs({
-        active: 0
-    });
-    $("#tabs").tabs({
-        activate: function(event,ui) {
-            var url = ui.newPanel.attr("title");
-            var panelId = panelIdFromUrl(url);
-            var idi = ui.newPanel.selector;
-            var tabitext = httpGet(url);
-            var key = idi+" div.listContainer";
-            if ( $(key).length==0 )
-            {
-                $(idi).append(tabitext);
-                if ( $('#'+panelId).length > 0 )
-                    prepareList(panelId);
+        })
+        .addClass('collapsed')
+        .children('ul').hide();
+    };
+    this.httpGet = function(theUrl)
+    {
+        var xmlHttp = null;
+        xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", theUrl, false );
+        if ( xmlHttp.readyState==1 )
+            xmlHttp.send( null );
+        return xmlHttp.responseText;
+    };
+    /**
+     * Prepare an incomplete list for expansion
+     */
+    this.preparePartialList = function()
+    {
+        jQuery('#'+self.target).find('li:has(a)')
+        .click( function(event) {
+            var t = jQuery(this);
+            if (this.children[0] == event.target
+                || this == event.target ) {
+                var subList = t.find('ul');
+                if ( subList != undefined && subList.length==0 )
+                {
+                    var ul = self.httpGet(this.children[0].getAttribute("href"));
+                    t.append(ul);
+                    t.toggleClass('expanded');
+                }
                 else
                 {
-                    var div = $(idi).children().first();
-                    var listId = div.attr("id");
-                    if ( undefined != listId )
-                        preparePartialList( listId );
+                    t.toggleClass('expanded');
+                    t.children('ul').toggle('fast');
                 }
+                return false;
             }
-        }
+            else
+                return true;
+        })
+        .addClass('collapsed')
+        .children('ul').hide();
+    };
+    var url = "http://"+window.location.hostname
+        +"/misc/?docid="+this.listid;
+    jQuery.get(url,function(data) {
+        var t = jQuery("#"+self.target);
+        t.contents().remove();
+        t.append( data );
+        var firstUl = t.find("div ul");
+        var idAttr = firstUl.attr('id');
+        if (typeof idAttr !== typeof undefined && idAttr !== false)
+            self.prepareList();
+        else
+            self.preparePartialList();
+        console.log("initialised list");
+    }).fail(function(){
+       console.log("Failed to fetch "+url);
     });
-    prepareList("titleIndex")
+}
+function getBrowseArgs()
+{
+    var params = new Object ();
+    var module_params = localStorage.getItem('browse_params');
+    if ( module_params != undefined && module_params.length>0 )
+    {
+        var parts = module_params.split("&");
+        for ( var i=0;i<parts.length;i++ )
+        {
+            var halves = parts[i].split("=");
+            if ( halves.length==2 )
+                params[halves[0]] = halves[1];
+        }
+    }
+    return params;
+}
+/* main entry point - gets executed when the page is loaded */
+jQuery(function(){
+    if (typeof(Storage) === "undefined") {
+        alert("this page requires HTML5 web storage");
+    }
+    else {
+        var params = getBrowseArgs();
+        var viewer = new browse(params['mod-target'],params['listid']);
+        console.log("Initialised viewer");
+    }
 });
-})(jQuery); // end of dollar namespace
+
 
 

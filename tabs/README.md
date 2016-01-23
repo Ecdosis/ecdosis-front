@@ -32,24 +32,24 @@ parameters are stored in browser local storage under the key
 'tabs_params', and '&lt;module_name&gt;_params'. So the tree module specific 
 params would be stored under tree_params. 
 
-If the user clicks on a new 
-tab, these parameters are used to compose a url, updated with the new 
-module's name.
+If the user clicks on a new tab, these parameters are used to compose a 
+url, updated with the new module's name.
 
 If the same module is resubmitted due to a change in its settings, the 
 module-specific parameters are retrieved, updated with new values, and 
 a new url composed that will pass through the tabs module back to the 
 same module.
 
+### Order of execution
 The usual read_args function, which used to read "arguments" to 
 javascript invocations by scanning the HTML doesn't work with tabs, 
-since the scripts must be specified before the page in ready. Since 
-drupal_add_js does not pass parameters in this way another mechanism had 
-to be devised, which is the use of local storage described above. The 
-mvdsingle, tree and compare modules have been adjusted to use this form 
-of parameter storage.
+since the tabs module must already be installed when the module 
+embedded in it is installed. Using a script-tag with arguments only 
+works for one level, not two. And arguments to scripts can't be used if 
+scripts are installed via drupal_add_js. So the solution adopted here is
+to use local broswer storage -- a HTML5 feature -- to store the parameters
+for each embedded module and also for tabs itself.
 
-### Order of execution
 The Tabs module first saves its own parameters to browser memory by adding a 
 script to the head section of the page before it is fully loaded (via 
 tabs_preprocess_page). It then embeds itself, then the parameters for the 
