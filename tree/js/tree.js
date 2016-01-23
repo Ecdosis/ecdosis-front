@@ -202,7 +202,7 @@ jQuery(function(){
     }
     else {
         var params = getTreeArgs('tree');
-        var viewer = new treeviewer(params['target'],params['docid']);
+        var viewer = new treeviewer(params['mod-target'],params['docid']);
     }
 }); 
 

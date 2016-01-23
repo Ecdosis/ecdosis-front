@@ -197,7 +197,7 @@ function get_one_param( params, name )
     {
         var halves = parts[i].split("=");
         if ( halves.length==2 && halves[0]==name )
-            return halves[1];
+            return unescape(halves[1]);
     }
     return "";
 }
@@ -216,7 +216,7 @@ function getMVDArgs( scrName )
         {
             var halves = parts[i].split("=");
             if ( halves.length==2 )
-                params[halves[0]] = halves[1];
+                params[halves[0]] = unescape(halves[1]);
         }
     }
     else
@@ -261,7 +261,7 @@ jQuery(function(){
     else
     {    
         var params = getMVDArgs('mvdsingle');
-        var viewer = new mvdsingle(params['target'],params['docid'], 
+        var viewer = new mvdsingle(params['mod-target'],params['docid'], 
         params['version1'],params['selections']);
     }
 }); 

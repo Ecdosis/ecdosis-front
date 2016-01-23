@@ -72,7 +72,6 @@ function browse( target, listid )
             self.prepareList();
         else
             self.preparePartialList();
-        console.log("initialised list");
     }).fail(function(){
        console.log("Failed to fetch "+url);
     });
@@ -101,7 +100,6 @@ jQuery(function(){
     else {
         var params = getBrowseArgs();
         var viewer = new browse(params['mod-target'],params['listid']);
-        console.log("Initialised viewer");
     }
 });
 

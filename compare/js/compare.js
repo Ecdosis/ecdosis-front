@@ -511,7 +511,7 @@ jQuery(document).ready(
         }
         else {
             var params = getCompareArgs('compare');
-            new comparer(params['target'],
+            new comparer(params['mod-target'],
                 params['docid'],params['modpath']);
         }
     }
