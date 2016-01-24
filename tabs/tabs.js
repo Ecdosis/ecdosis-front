@@ -1,11 +1,12 @@
 /**
  * Tabbed container
  */
-function tabbed(target,module,tabset,tabs,modules)
+function tabbed(target,module,tabset,tabs,modules,menuopt)
 {
     this.target = target;
     this.module = module;
     this.tabset = tabset;
+    this.menuopt = menuopt;
     this.tabs = tabs.replace(/\+/g," ").split(",");
     this.modules = modules.split(",");
     var self = this;
@@ -111,6 +112,25 @@ function tabbed(target,module,tabset,tabs,modules)
         }
     });
     t.css("visibility","visible");
+    if ( this.menuopt == "true" )
+    {
+        jQuery("#optional-tab").css("display","inline");
+        var a = jQuery("#optional-tab").find("a");
+        a.addClass("nolink");
+    }
+    // disable nolinks
+    jQuery('.nolink').click(function(e) {
+        e.preventDefault();
+    });
+    // activate main menu item corresponding to this tabset
+    var menuItem = this.capitalise(this.tabset);
+    jQuery(".menu .leaf").each(function(){
+        if ( jQuery(this).text() == menuItem )
+        {
+            jQuery(this).attr("class","first leaf");
+            jQuery(this).find("a").addClass("active");
+        }
+    });
 }
 /**
  * This reads the "arguments" to the javascript file
@@ -169,6 +189,7 @@ jQuery(function(){
         var t = jQuery("#"+params['target']);
         if ( t != undefined )
             t.css("visibility","hidden");
-        var tabs = new tabbed(params['target'],params['module'],params['tabset'],params['tabs'],params['modules']);
+        var tabs = new tabbed(params['target'],params['module'],params['tabset'],
+            params['tabs'],params['modules'],params['menuopt']);
     }
 }); 

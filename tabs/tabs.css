@@ -3,13 +3,14 @@
   border-top:1px solid grey;
   border-left:1px solid grey;
   border-right:1px solid grey;
-  background-color:lightgrey;
+  background-color:#E0E0E0;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:#2883DE;
   font-size:13px;
   white-space:nowrap;
   border-bottom: 1px solid grey;
 }
 #tab-final {width:100%;}
-#tab-selected {background-color:whitesmoke;border-bottom:1px solid whitesmoke}
+#tab-selected {color:black;background-color:white;border-bottom:1px solid white}
 .tab:hover {cursor:pointer}
 #main {margin-top:0px !important}

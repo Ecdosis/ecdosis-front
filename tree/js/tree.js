@@ -81,7 +81,7 @@ function treeviewer(target,docid)
             +'<option selected>weighted</option><option>intermediate</option>'
             +'<option>centered</option><option>inner</option></select></td>'
             +'<td><input type="submit" value="redraw"></input>'
-            +'<input type="hidden" name="docid" value="'+docid+'"></input>'
+            +'<input type="hidden" name="docid" id="docid" value="'+docid+'"></input>'
             +'<input type="hidden" name="module" value="tree"></input>'
             +'</td></tr></table>';
         jQuery("#treeform").append(content);
@@ -115,6 +115,7 @@ function treeviewer(target,docid)
         }
         jQuery("#"+self.target).css("visibility","visible");
         jQuery('#treeform').submit(function() {
+            console.log("submitting treeform");
             var treetype=jQuery("#treestyle").val();
             var treegrows=jQuery("#treegrows").val();
             var usebranchlengths=jQuery("#usebranchlengths").val();
@@ -129,6 +130,7 @@ function treeviewer(target,docid)
             // add in the docid
             var tabs_params = self.paramsToMap(localStorage.getItem('tabs_params'));
             jQuery('#docid').val(unescape(tabs_params['docid']));
+            console.log( jQuery('#docid').val());
             return true;
         });        
     });

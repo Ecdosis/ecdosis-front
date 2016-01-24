@@ -4,13 +4,15 @@
  * @param docid the docid to retrieve the version from
  * @param version1 the version id to fetch
  * @param selections (optional) mvd-offsets of words to select
+ * @param message briefly display on load or null
  */
-function mvdsingle(target,docid,version1,selections) 
+function mvdsingle(target,docid,version1,selections,message) 
 {
     this.docid = docid;
     this.version1 = version1;
     this.selections = selections;
     this.target = target;
+    this.message = message;
     this.layers = {base:'original text',del1:'first deletion layer',rdg1:'first alternative layer'};
     var self = this;
     /**
@@ -97,7 +99,6 @@ function mvdsingle(target,docid,version1,selections)
         var parts = vid.split("/");
         if ( parts.length>1&&parts[1] in sources )
         {
-             
              var title = sources[parts[1]];
              if ( parts.length > 2 && parts[parts.length-1] in self.layers )
                  title += ": "+self.layers[parts[parts.length-1]];
@@ -143,6 +144,11 @@ function mvdsingle(target,docid,version1,selections)
         jQuery.get(url, function(response) {
             self.installCss(response);
             jQuery("#body").contents().remove();
+            if ( self.message != null )
+            {
+                jQuery("#body").append('<p id="temp-message">'+self.message+'</p>');
+                window.setTimeout('jQuery("#temp-message").remove()', 10000);
+            }
             jQuery("#body").append(response);
             self.getVersionMetadata();
             jQuery("#"+self.target).css("visibility","visible");
@@ -263,7 +269,25 @@ jQuery(function(){
     {    
         var params = getMVDArgs('mvdsingle');
         var t = jQuery("#"+params['mod-target']).css("visibility","hidden");
-        var viewer = new mvdsingle(params['mod-target'],params['docid'], 
-        params['version1'],params['selections']);
+        // user clicked on view tabset without selecting a work first...
+        // the projid should be set by the mvdsingle.module code
+        // and can be adjusted in Drupal config for mvdsingle
+        if ( !('docid' in params)||params['docid'].length==0 )
+        {
+            var url = "http://"+window.location.hostname
+                +"/project/randomdocid?projid=english/harpur";
+            jQuery.get(url,function(data){
+                var message = "Choose a work from the main menu via Find or Browse. "
+                    +"In the meantime I have chosen one for you."
+                // got to copy this here or race condition exists
+                var viewer = new mvdsingle(params['mod-target'],data,
+                    params['version1'],params['selections'],message);
+            });
+        }
+        else
+        {
+            var viewer = new mvdsingle(params['mod-target'],params['docid'], 
+                params['version1'],params['selections'],null);
+        }
     }
 }); 

@@ -4,13 +4,19 @@
  * A block module that displays a single version of an MVD at a time.
  * This is just a minimal wrapper for the object defined in mvdsingle.js
  */
-function mvdsingle_preprocess_page()
+function mvdsingle_preprocess_page(&$vars)
 {
     if ( strpos(request_uri(),"mvdsingle") )
     {
         drupal_add_css(drupal_get_path('module','mvdsingle')
             .'/css/mvdsingle.css','file');
-        /* don't include javascript or it gets loaded twice */
+        /* set default project id (to enable random docid calculation) */
+        $projid = variable_get('mvdsingle_projid');
+        drupal_add_js(
+            "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
+            ."{alert('this page requires HTML5 web storage');}else"
+            ."{var standing=localStorage.getItem('mvdsingle_params');"
+            ."localStorage.setItem('mvdsingle_params',standing+'&projid="+$projid+"')}})",'inline');
     }
 }
 function build_mvd_args()
@@ -101,10 +107,10 @@ function mvdsingle_block_view($delta = '')
  */
 function mvdsingle_form($form, &$form_state)
 {
-    $form['mvdsingle_docid'] = array(
+    $form['mvdsingle_projid'] = array(
         '#type' => 'textfield',
-        '#title' => t('Default docid'),
-        '#default_value' => 'english/harpur/h642',
+        '#title' => t('Default projid'),
+        '#default_value' => 'english/harpur',
         '#size' => 128,
         '#maxlength' => 256,
         '#required' => TRUE
