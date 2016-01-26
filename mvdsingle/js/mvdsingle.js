@@ -177,7 +177,7 @@ function mvdsingle(target,docid,version1,selections,message)
      */
     this.installDropdown = function() {
         var url = "http://"+window.location.hostname
-            +"/formatter/list?docid="+this.docid+"&list_id=versions";
+            +"/formatter/list?docid="+this.docid+"&listid=versions";
         if ( this.version1 != undefined && this.version1.length>0 )
             url += "&version1="+this.version1;
         jQuery.get(url, function(responseText) {

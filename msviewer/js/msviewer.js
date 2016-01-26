@@ -422,14 +422,6 @@ function msviewer(target,docid)
         self.magnifyDiv.css("visibility","visible");
     }
     /**
-     * Get the ms title
-     * @return a string
-     */
-    this.msTitle = function() {
-        var parts = this.docid.split("/");
-        return parts[parts.length-1];
-    };
-    /**
      * Move to the next recto/verson on the left
      */
     this.goLeft = function() {
@@ -464,7 +456,7 @@ function msviewer(target,docid)
     {
         var tgt = jQuery("#"+this.target);
         tgt.append(html);
-        jQuery("#ms-title").text(this.msTitle());
+        jQuery("#ms-title").text(this.title);
         /**
          * Handle slider events
          */
@@ -619,7 +611,8 @@ function msviewer(target,docid)
     jQuery.get( "http://"+window.location.hostname+"/pages/anthology/?docid="+this.docid,
     function(data)
     {
-        self.pages = data;
+        self.pages = data.ranges;
+        self.title = data.title;
         var html = '<div id="ms-main">';
         html += '<div id="ms-title"></div>';
         html += '<div id="ms-tools" title="full-screen mode"><i id="ms-fullscreen" class="fa fa-2x fa-expand"></i></div>';
