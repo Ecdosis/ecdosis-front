@@ -25,7 +25,10 @@ function paraviewer(target,format,docid)
             var bare_file = old_src.substr(0,old_src.indexOf("."));
             var suffix = old_src.substr(old_src.indexOf("."));
             var large_file = bare_file+"-large"+suffix;
+            var max_height = Math.round((jQuery(window).height()*9)/10);
             jQuery("body").append('<div id="enlarged"><img src="'+large_file+'"></div>');
+            jQuery("#enlarged img").css("max-height",max_height+"px");
+            console.log("max_height="+max_height);
             jQuery("#enlarged").click(function(evt){
                 if ( evt.target.tagName == 'IMG' )
                     jQuery(evt.target).parent().remove();

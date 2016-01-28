@@ -118,6 +118,8 @@ function tabbed(target,module,tabset,tabs,modules,menuopt)
         var a = jQuery("#optional-tab").find("a");
         a.addClass("nolink");
     }
+    else
+        jQuery("#optional-tab").css("display","none");
     // disable nolinks
     jQuery('.nolink').click(function(e) {
         e.preventDefault();
