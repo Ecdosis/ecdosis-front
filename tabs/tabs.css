@@ -14,3 +14,4 @@
 #tab-selected {color:black;background-color:white;border-bottom:1px solid white}
 .tab:hover {cursor:pointer}
 #main {margin-top:0px !important}
+#tabs-content h2 {font-weight:normal}

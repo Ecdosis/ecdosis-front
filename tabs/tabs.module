@@ -343,7 +343,7 @@ function tabs_form($form, &$form_state)
         '#title' => t('Params'),
         '#default_value' => variable_get('tabs_params_'.ordinal($i),'Url '.$i),
         '#size' => 76,
-        '#maxlength' => 256,
+        '#maxlength' => 512,
         '#required' =>TRUE
         );
     }

@@ -1,0 +1,4 @@
+name = para
+description = Fetch miscellaneous HTML or Markdown pages belonging to an edition
+core = 7.x
+configure = admin/config/content/para
