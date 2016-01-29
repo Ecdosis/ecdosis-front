@@ -115,7 +115,6 @@ function treeviewer(target,docid)
         }
         jQuery("#"+self.target).css("visibility","visible");
         jQuery('#treeform').submit(function() {
-            console.log("submitting treeform");
             var treetype=jQuery("#treestyle").val();
             var treegrows=jQuery("#treegrows").val();
             var usebranchlengths=jQuery("#usebranchlengths").val();
@@ -130,7 +129,6 @@ function treeviewer(target,docid)
             // add in the docid
             var tabs_params = self.paramsToMap(localStorage.getItem('tabs_params'));
             jQuery('#docid').val(unescape(tabs_params['docid']));
-            console.log( jQuery('#docid').val());
             return true;
         });        
     });

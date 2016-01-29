@@ -1,6 +1,6 @@
 /**
- * Simple GUI to find things in an index
- * @param target the id of the target eleemnt on the page
+ * A configurable table of works sortable by id, title and date
+ * @param target the id of the target element on the page
  * @param title the table title
  * @param projid the id of the project
  */
@@ -11,7 +11,7 @@ function works(target,title,projid)
     this.sortStates = ["ascending","unsorted","unsorted"];
     this.cellTitles = ["Id","Title","First Year"];
     this.cellIds = ["hnumber","normtitle","firstyear"];
-    this.projid = projid;
+    this.projid = unescape(projid);
     var self = this;
     /**
      * Copy the generated HTML into the page
@@ -209,7 +209,7 @@ function works(target,title,projid)
                 break;
             }
         return "http://"+window.location.host+"/"+firstPath+"/mvdsingle?docid="
-            +this.projid+'/'+workid+"/"+versionid;
+            +this.projid+'/'+workid+"&version1=/"+versionid;
     };
     /**
      * Format the list of versions and add it to the currently open row
@@ -333,7 +333,6 @@ function works(target,title,projid)
         this.set_html( html );
         var main = jQuery("#works");
         main.prepend('<table id="versions"></table>');
-        main.prepend('<h3 class="tabletitle">'+this.tableTitle+'</h3>');
         var table = jQuery("#versions");
         table.append(this.makeHeader());
         this.lookupTable = {};
@@ -341,7 +340,9 @@ function works(target,title,projid)
         for ( var i=0;i<this.jsonTable.length;i++ )
         {
             if ( !this.jsonTable[i].alias )
+            {
                 this.lookupTable[this.jsonTable[i].id]=this.jsonTable[i];
+            }
             else
                 this.lookupTable[this.jsonTable[i].defaultVersion]=this.jsonTable[i];
         }
@@ -387,51 +388,87 @@ function works(target,title,projid)
         });
     };
     var url = "http://"+window.location.hostname+"/project/works";
+    url += "?projid="+this.projid;
     jQuery("body").append('<div id="progress">Please wait while the table loads...</div>');
     jQuery.get(url,function(data) {
         self.jsonTable = data;
         self.rebuild();
+        jQuery("#"+self.target).css("visibility","visible");
         jQuery("#progress").remove();
     });
+}
+function get_one_param( params, name )
+{
+    var parts = params.split("&");
+    for ( var i=0;i<parts.length;i++ )
+    {
+        var halves = parts[i].split("=");
+        if ( halves.length==2 && halves[0]==name )
+            return halves[1];
+    }
+    return "";
 }
 /**
  * This reads the "arguments" to the javascript file
  * @param scrName the name of the script file minus ".js"
- * @return a key-value map of the parameters
  */
-function get_args( scrName )
+function getWorksArgs( scrName )
 {
-    var scripts = jQuery("script");
     var params = new Object ();
-    scripts.each( function(i) {
-        var src = jQuery(this).attr("src");
-        if ( src != undefined && src.indexOf(scrName) != -1 )
+    var module_params = localStorage.getItem('works_params');
+    if ( module_params != undefined && module_params.length>0 )
+    {
+        var parts = module_params.split("&");
+        for ( var i=0;i<parts.length;i++ )
         {
-            var qStr = src.replace(/^[^\?]+\??/,'');
-            if ( qStr )
-            {
-                var pairs = qStr.split(/[;&]/);
-                for ( var i = 0; i < pairs.length; i++ )
-                {
-                    var keyVal = pairs[i].split('=');
-                    if ( ! keyVal || keyVal.length != 2 )
-                        continue;
-                    var key = unescape( keyVal[0] );
-                    var val = unescape( keyVal[1] );
-                    val = val.replace(/\+/g, ' ');
-                    params[key] = val;
-                }
-            }
-            return params;
+            var halves = parts[i].split("=");
+            if ( halves.length==2 )
+                params[halves[0]] = halves[1];
         }
-    });
+    }
+    else
+    {
+        var scripts = jQuery("script");
+        scripts.each( function(i) {
+            var src = jQuery(this).attr("src");
+            if ( src != undefined && src.indexOf(scrName) != -1 )
+            {
+                var qStr = src.replace(/^[^\?]+\??/,'');
+                if ( qStr )
+                {
+                    var pairs = qStr.split(/[;&]/);
+                    for ( var i = 0; i < pairs.length; i++ )
+                    {
+                        var keyVal = pairs[i].split('=');
+                        if ( ! keyVal || keyVal.length != 2 )
+                            continue;
+                        var key = unescape( keyVal[0] );
+                        var val = unescape( keyVal[1] );
+                        val = val.replace(/\+/g, ' ');
+                        params[key] = val;
+                    }
+                }
+                return params;
+            }
+        });
+    }
+    if ( !('projid' in params) )
+    {
+        var tabs_params = localStorage.getItem('tabs_params');
+        if ( tabs_params != undefined && tabs_params.length>0 )
+            params['projid'] = get_one_param(tabs_params,'docid');
+    }
     return params;
 }
-/**
- * Load the rebuild index dialog with two arguments
- */
-jQuery(document).ready( function() { 
-    var params = get_args('works');
-    var projid = (params['projid']==undefined)?"english/harpur":params['projid'];
-    new works(params['target'],params['title'],projid);
+/* main entry point - gets executed when the page is loaded */
+jQuery(function(){
+    if(typeof(Storage) === "undefined") {
+        alert("this page requires HTML5 web storage");
+    }
+    else {
+        var params = getWorksArgs('works');
+        var projid = (params['projid']==undefined)?"english/harpur":params['projid'];
+        jQuery("#"+params['mod-target']).css("visibility","hidden");
+        var w = new works(params['mod-target'],params['title'],projid);
+    }
 }); 

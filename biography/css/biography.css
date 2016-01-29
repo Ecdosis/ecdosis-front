@@ -7,11 +7,19 @@ line-height: normal;
 font-size: small;
 margin-bottom: 0;
 }
+#tabs-content div[class="references"] p {
+line-height: normal;
+font-size: small;
+margin-bottom: 0;
+}
 div[class="year"] h3 {
 margin-top: 20px;
 text-align: center;
 }
 div[class="bio"] p {
+    margin-bottom: 0;
+}
+#tabs-content div[class="bio"] p {
     margin-bottom: 0;
 }
 div[class="bio"] p + p {

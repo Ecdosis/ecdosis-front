@@ -24,11 +24,10 @@ switch ($path)
 function gridhome_block_view($delta = '') {
   switch ($delta) {
     case 'gridhome':
-      error_log("setting block content");
       $mod_path = drupal_get_path('module', 'gridhome');
       $block['content'] = '<script type="text/javascript" src="'
           .$mod_path.'/gridhome.js?target=content&modpath='.$mod_path.
-          '&dbname=drupaldb&nid=39"></script>';
+          '&docid=english/harpur/home"></script>';
       return $block;
   }
 }

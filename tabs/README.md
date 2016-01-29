@@ -72,3 +72,17 @@ with the parameter tabset=&lt;key&gt;. If a module belonging to a
 particular tabset is provided, but not the tabset parameter, this will 
 be added automatically by the tabs module. This allows modules to have 
 no knowledge of which tabset they belong to.
+
+The Drupal settings for each tabset is in the form of a list of URL 
+arguments, each separated by &amp;. Three keys are recognised as follows:
+
+1. tabs: a comma-separated list of tab-names, with spaces encoded as %20. 
+The first word will be capitalised.
+2. modules: a comma-separated list of module names, which must be installed
+in Drupal, and which must have a js directory with a script called 
+[module-name].js. Modules may take an argument, which will be passed to the
+module when it is invoked. The argument is introduced by %3F (?) and the 
+equals sign must be encoded as %3D.
+3. tabopt: a boolean that if false indicates that it should not enable an 
+optional main menu item with the id optional-tab. If true it will make that 
+item visible.

@@ -1,11 +1,10 @@
-function gridhome(target,modpath,dbname,nid)
+function gridhome(target,modpath,docid)
 {
    var self = this;
    this.loadBody = function() {
-        var url = modpath+'/get_node_body.php?dbname='+dbname+'&nid='+nid;
+        var url = "http://"+window.location.hostname+"/misc/html?docid="+docid;
         jQuery.get(url, function(data) {
-            var jArray = JSON.parse(data);
-            jQuery("#gridhome_body").append(jArray[0].body_value);
+            jQuery("#gridhome_body").append(data);
         });
     };
     var url = modpath+'/template.html';
@@ -52,5 +51,5 @@ function get_args( scrName )
  */
 jQuery(document).ready( function() { 
     var params = get_args('gridhome');
-    new gridhome(params['target'],params['modpath'],params['dbname'],params['nid']);
+    new gridhome(params['target'],params['modpath'],params['docid']);
 }); 

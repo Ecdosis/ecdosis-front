@@ -38,8 +38,9 @@ function browse( target, listid )
         jQuery('#'+self.target).find('li:has(a)')
         .click( function(event) {
             var t = jQuery(this);
-            if (this.children[0] == event.target
-                || this == event.target ) {
+            if ( this == event.target 
+                || (this.children.length>0 
+                && this.children[0] == event.target) ) {
                 var subList = t.find('ul');
                 if ( subList != undefined && subList.length==0 )
                 {
@@ -94,6 +95,9 @@ function getBrowseArgs()
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
+    window.onerror = function(error) {
+        alert(error);
+    };
     if (typeof(Storage) === "undefined") {
         alert("this page requires HTML5 web storage");
     }

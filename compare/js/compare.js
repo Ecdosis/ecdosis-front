@@ -307,9 +307,7 @@ function comparer( target, docid, modpath )
      * @param index the sorted offset array giving us the id
      */
     this.findIds = function( elem, hash, index ) {
-        if ( elem[0] == undefined )
-            console.log("undefined");
-        if ( elem[0].nodeName == "SPAN"
+        if ( elem.length>0&& elem[0].nodeName == "SPAN"
 	        && elem.attr('id') != undefined )
         {
 	        var idAttr = elem.attr('id');

@@ -3,8 +3,7 @@ function works_preprocess_page(&$vars)
 {
     if ( strpos(request_uri(),"works") )
     {
-        drupal_add_css(drupal_get_path('module','works').'/works.css','file');
-        drupal_add_css(drupal_get_path('theme','ecdosis').'/css/font-awesome.min.css','file');
+        drupal_add_css(drupal_get_path('module','works').'/css/works.css','file');
     }
 }
 function works_all()

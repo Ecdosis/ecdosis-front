@@ -182,6 +182,9 @@ function getTabsArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
+    window.onerror = function(error) {
+        alert(error);
+    };
     if(typeof(Storage) === "undefined") {
         alert("this page requires HTML5 web storage");
     }

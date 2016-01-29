@@ -2,3 +2,4 @@ name = Biography
 description = Human readable, interactive biography of author based on events
 core = 7.x
 configure = admin/config/content/biography
+
