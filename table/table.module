@@ -1,0 +1,62 @@
+<?php
+function table_preprocess_page(&$vars)
+{
+    if (user_access('administer modules') && path_is_admin(current_path())) {
+        drupal_add_css(drupal_get_path('module','table').'/css/table.css','file');
+    }
+    else if ( strpos(request_uri(),"table") )
+    {
+        drupal_add_css(drupal_get_path('module','table').'/css/table.css','file');
+    }
+}
+function table_block_info() {
+  $blocks['table'] = array(
+    'info' => t('Display an MVD as a table'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function table_help($path, $arg) {
+    switch ($path)
+    {
+        case "admin/help#table":
+            return '<p>' .
+                t("Display an MVD as a table")
+                . '</p>';
+            break;
+    }
+}
+function build_table_args()
+{
+    $args = "";
+    if ( array_key_exists ("docid", $_GET) )
+        $args .= 'docid='.$_GET["docid"];
+    if ( array_key_exists ("target", $_GET) )
+        $args .= '&target='.$_GET["target"];
+    if ( array_key_exists ("mod-target", $_GET) )
+        $args .= '&mod-target='.$_GET["mod-target"];
+    if ( array_key_exists('selected',$_GET) )
+        $args .= '&selected='.$_GET['selected'];
+    if ( array_key_exists('version1',$_GET) )
+        $args .= '&version1='.$_GET['version1']; 
+    if ( array_key_exists('pos',$_GET) )
+        $args .= '&pos='.$_GET['pos']; 
+    if ( array_key_exists('left',$_GET) )
+        $args .= '&left='.$_GET['left']; 
+    if ( array_key_exists('right',$_GET) )
+        $args .= '&right='.$_GET['right']; 
+    if ( strpos($args,'&')==0 )
+        $args = substr($args,1);
+    return $args;
+}
+function table_block_view($delta = '') {
+  switch ($delta) {
+    case 'table':
+      $block['subject'] = t('Display an MVD as a table');
+      $args = build_table_args();
+      $mod_path = drupal_get_path('module', 'table');
+      $block['content'] = '<script type="text/javascript" src="'.$mod_path
+          .'/js/table.js?'.$args.'"></script>';
+      return $block;
+  }
+}
