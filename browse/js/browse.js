@@ -80,7 +80,7 @@ function browse( target, listid )
 function getBrowseArgs()
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('browse_params');
+    var module_params = jQuery("#browse_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -95,16 +95,8 @@ function getBrowseArgs()
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    window.onerror = function(error) {
-        alert(error);
-    };
-    if (typeof(Storage) === "undefined") {
-        alert("this page requires HTML5 web storage");
-    }
-    else {
-        var params = getBrowseArgs();
-        var viewer = new browse(params['mod-target'],params['listid']);
-    }
+    var params = getBrowseArgs();
+    var viewer = new browse(params['mod-target'],params['listid']);
 });
 
 

@@ -215,7 +215,7 @@ function get_one_param( params, name )
 function getMVDArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('mvdsingle_params');
+    var module_params = jQuery("#mvdsingle_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -254,7 +254,7 @@ function getMVDArgs( scrName )
     }
     if ( !('docid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }
@@ -262,32 +262,8 @@ function getMVDArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    if(typeof(Storage) === "undefined") {
-        alert("this page requires HTML5 web storage");
-    }
-    else
-    {    
-        var params = getMVDArgs('mvdsingle');
-        var t = jQuery("#"+params['mod-target']).css("visibility","hidden");
-        // user clicked on view tabset without selecting a work first...
-        // the projid should be set by the mvdsingle.module code
-        // and can be adjusted in Drupal config for mvdsingle
-        if ( !('docid' in params)||params['docid'].length==0 )
-        {
-            var url = "http://"+window.location.hostname
-                +"/project/randomdocid?projid=english/harpur";
-            jQuery.get(url,function(data){
-                var message = "Choose a work from the main menu via Find or Browse. "
-                    +"In the meantime I have chosen one for you."
-                // got to copy this here or race condition exists
-                var viewer = new mvdsingle(params['mod-target'],data,
-                    params['version1'],params['selections'],message);
-            });
-        }
-        else
-        {
-            var viewer = new mvdsingle(params['mod-target'],params['docid'], 
-                params['version1'],params['selections'],null);
-        }
-    }
+    var params = getMVDArgs('mvdsingle');
+    var t = jQuery("#"+params['mod-target']).css("visibility","hidden");
+    var viewer = new mvdsingle(params['mod-target'],params['docid'], 
+        params['version1'],params['selections'],null);
 }); 

@@ -88,7 +88,7 @@ function tabbed(target,module,tabset,tabs,modules,menuopt)
                 var mod_name = "";
                 var obj = new Object();
                 // get stale params from local storage
-                var other_params = localStorage.getItem(mod_name+"_params");
+                var other_params = jQuery("#"+mod_name+"_params").val();
                 obj = self.paramsToObj(other_params,obj);
                 // refresh with curently seleted params in mod_spec if present
                 var extra_params="";
@@ -99,7 +99,7 @@ function tabbed(target,module,tabset,tabs,modules,menuopt)
                     obj = self.paramsToObj(extra_params,obj);
                     mod_name = mod_spec.substring(0,extra_index);
                 }
-                var tabs_params = localStorage.getItem('tabs_params');
+                var tabs_params = jQuery("#tabs_params").val();
                 var docid = self.getOneParam(tabs_params,'docid');
                 var new_url = "http://"+window.location.hostname+window.location.pathname;
                 obj['module'] = mod_spec;
@@ -141,7 +141,7 @@ function tabbed(target,module,tabset,tabs,modules,menuopt)
 function getTabsArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('tabs_params');
+    var module_params = jQuery("#tabs_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -182,19 +182,10 @@ function getTabsArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    window.onerror = function(error) {
-        alert(error);
-    };
-    if(typeof(Storage) === "undefined") {
-        alert("this page requires HTML5 web storage");
-    }
-    else
-    {
-        var params = getTabsArgs('tabs');
-        var t = jQuery("#"+params['target']);
-        if ( t != undefined )
-            t.css("visibility","hidden");
-        var tabs = new tabbed(params['target'],params['module'],params['tabset'],
-            params['tabs'],params['modules'],params['menuopt']);
-    }
+    var params = getTabsArgs('tabs');
+    var t = jQuery("#"+params['target']);
+    if ( t != undefined )
+        t.css("visibility","hidden");
+    var tabs = new tabbed(params['target'],params['module'],params['tabset'],
+        params['tabs'],params['modules'],params['menuopt']);
 }); 

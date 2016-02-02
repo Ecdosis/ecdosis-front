@@ -455,7 +455,7 @@ function get_one_param( params, name )
 function getCompareArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('compare_params');
+    var module_params = jQuery("#compare_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -463,7 +463,7 @@ function getCompareArgs( scrName )
         {
             var halves = parts[i].split("=");
             if ( halves.length==2 )
-                params[halves[0]] = halves[1];
+                params[halves[0]] = unescape(halves[1]);
         }
     }
     else
@@ -494,7 +494,7 @@ function getCompareArgs( scrName )
     }
     if ( !('docid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }    
@@ -503,17 +503,10 @@ function getCompareArgs( scrName )
 /**
  * Load the compare tool with three arguments
  */
-jQuery(document).ready(
-    function() {
-        if(typeof(Storage) === "undefined") {
-            alert("this page requires HTML5 web storage");
-        }
-        else {
-            var params = getCompareArgs('compare');
-            jQuery("#"+params['mod-target']).css("visibility","hidden");
-            new comparer(params['mod-target'],
-                params['docid'],params['modpath']);
-        }
-    }
-);
+jQuery(document).ready(function(){
+    var params = getCompareArgs('compare');
+    jQuery("#"+params['mod-target']).css("visibility","hidden");
+    new comparer(params['mod-target'],
+        params['docid'],params['modpath']);
+});
 

@@ -38,14 +38,15 @@ function treeviewer(target,docid)
         }
         return str;
     };
-    if ( docid == undefined || docid.length==0 )
+    if ( this.docid == undefined || this.docid.length==0 )
     {
-        docid = localStorage.getItem('docid');
+        var tabs_params = jQuery("#tabs_params").val();
+        this.docid = get_one_param(tabs_params,'docid');
     }
-    var url = "http://"+window.location.hostname+'/tree/title?docid='+docid;
+    var url = "http://"+window.location.hostname+'/tree/title?docid='+this.docid;
     jQuery.get(url,function(data) {
         var src = "http://"+window.location.hostname+"/tree/";
-        var tree_params = localStorage.getItem('tree_params');
+        var tree_params = jQuery("#tree_params").val();
         var tree_map = self.paramsToMap(tree_params);
         var treetype = tree_map['treestyle'];
         var treegrows = tree_map['treegrows'];
@@ -119,15 +120,17 @@ function treeviewer(target,docid)
             var treegrows=jQuery("#treegrows").val();
             var usebranchlengths=jQuery("#usebranchlengths").val();
             var ancnodes=jQuery("#ancnodes").val();
-            var tree_params = localStorage.getItem('tree_params');
+            var tree_params = jQuery("#tree_params").val();
             var map = self.paramsToMap(tree_params);
             map['treetype']= treetype;
             map['treegrows'] = treegrows;
             map['usebranchlengths'] = usebranchlengths;
             map['ancnodes'] = ancnodes;
-            localStorage.setItem('tree_params',self.mapToParams(map));
+            if ( jQuery("#tree_params").length==0 )
+                jQuery(document).append('<input type="hidden" id="tree_params"></input>');
+            jQueru("#tree_params").val(self.mapToParams(map));
             // add in the docid
-            var tabs_params = self.paramsToMap(localStorage.getItem('tabs_params'));
+            var tabs_params = self.paramsToMap(jQUery("#tabs_params").val());
             jQuery('#docid').val(unescape(tabs_params['docid']));
             return true;
         });        
@@ -140,7 +143,7 @@ function get_one_param( params, name )
     {
         var halves = parts[i].split("=");
         if ( halves.length==2 && halves[0]==name )
-            return halves[1];
+            return unescape(halves[1]);
     }
     return "";
 }
@@ -151,7 +154,7 @@ function get_one_param( params, name )
 function getTreeArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('tree_params');
+    var module_params = jQuery("#tree_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -190,7 +193,7 @@ function getTreeArgs( scrName )
     }
     if ( !('docid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }
@@ -198,13 +201,8 @@ function getTreeArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    if(typeof(Storage) === "undefined") {
-        alert("this page requires HTML5 web storage");
-    }
-    else {
-        var params = getTreeArgs('tree');
-        jQuery("#"+params['mod-target']).css("visibility","hidden");
-        var viewer = new treeviewer(params['mod-target'],params['docid']);
-    }
+    var params = getTreeArgs('tree');
+    jQuery("#"+params['mod-target']).css("visibility","hidden");
+    var viewer = new treeviewer(params['mod-target'],params['docid']);
 }); 
 

@@ -239,25 +239,25 @@ function tabs_preprocess_page(&$vars)
         $empty = array();
         add_uri_params($tabs_params,request_uri(),$tab_includes,$empty);
         add_uri_params($mod_params,request_uri(),$empty,$tab_includes);
-        // invoke tabs
+        // prepare tabs
         $tabs_path = drupal_get_path('module','tabs');
         $tabs_script = $tabs_path.'/tabs.js';
         $tabs_uri_params = compose_tabs_params($tabs_params);
-        drupal_add_js(
-            "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
-            ."{alert('this page requires HTML5 web storage');}else"
-            ."{localStorage.setItem('tabs_params','".$tabs_uri_params."')}})",'inline');
-        drupal_add_js($tabs_script,'file');
-        // invoke module
+        // prepare module
         $mod_spec = get_module($tabs_params);
         $mod_name = get_mod_name($mod_spec);
         $mod_path = drupal_get_path('module',$mod_name);
         $mod_script = $mod_path.'/js/'.$mod_name.'.js';
         $mod_uri_params = compose_mod_params($mod_params,$mod_spec);
         drupal_add_js(
-            "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
-            ."{alert('this page requires HTML5 web storage');}else"
-            ."{localStorage.setItem('".$mod_name."_params','".$mod_uri_params."')}})",'inline');
+            'jQuery(document).ready(function (){'
+            .'if (jQuery("#tabs_params").length==0){jQuery(document.body).append(\''
+            .'<input type="hidden" id="tabs_params"></input>\');}if (jQuery("#'
+            .$mod_name.'_params").length==0)jQuery(document.body).append(\''
+            .'<input type="hidden" id="'.$mod_name.'_params"></input>\');'
+            .'jQuery("#tabs_params").val("'.$tabs_uri_params.'");jQuery("#'.$mod_name
+            .'_params").val("'.$mod_uri_params.'");});','inline');
+        drupal_add_js($tabs_script,'file');
         drupal_add_js($mod_script,'file');
         drupal_add_css($mod_path.'/css/'.$mod_name.'.css','file');
     }
@@ -291,7 +291,7 @@ function tabs_block_view($delta = '') {
           $args = explode("&",$rest);
           $tabs_params = "?"+compose_tabs_params($args);
       }
-      $mod_path = drupal_get_path('module', 'compare');
+      $mod_path = drupal_get_path('module', 'tabs');
       $block['content'] = '<script type="text/javascript" src="'.$mod_path
           .'/tabs.js'.$tabs_params.'"></script>';
       return $block;

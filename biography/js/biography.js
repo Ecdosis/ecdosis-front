@@ -742,7 +742,7 @@ function get_one_param( params, name )
 function getBiogArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('biography_params');
+    var module_params = jQuery("#biography_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -781,7 +781,7 @@ function getBiogArgs( scrName )
     }
     if ( !('docid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }

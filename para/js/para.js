@@ -8,18 +8,18 @@ function paraviewer(target,format,docid)
     this.docid = decodeURI(docid);
     this.format = (format==undefined)?"text/x-markdown":format;
     var self = this;
-    if (typeof(Storage) !== "undefined") {
-        if ( docid == undefined || docid.length==0 )
-        {
-            docid = localStorage.getItem('docid');
-        }
-        var url = "http://"+window.location.hostname+'/misc/html?docid='
-            +this.docid+'&format='+this.format;
-        jQuery.get(url,function(data) {
-            var t = jQuery("#"+self.target);
-            t.contents().remove();
-            t.append(data);
-        // copied from iage_expander which won't work otherwise
+    if ( this.docid == undefined || this.docid.length==0 )
+    {
+        var tabs_params = jQuery("#tabs_params").val();
+        this.docid = get_one_param(tabs_params,'docid');
+    }
+    var url = "http://"+window.location.hostname+'/misc/html?docid='
+        +this.docid+'&format='+this.format;
+    jQuery.get(url,function(data) {
+        var t = jQuery("#"+self.target);
+        t.contents().remove();
+        t.append(data);
+        // copied from image_expander which won't work otherwise
         jQuery('img[alt="expandable"]').click(function(e){
             var old_src = jQuery(e.target).attr("src");
             var bare_file = old_src.substr(0,old_src.indexOf("."));
@@ -28,7 +28,6 @@ function paraviewer(target,format,docid)
             var max_height = Math.round((jQuery(window).height()*9)/10);
             jQuery("body").append('<div id="enlarged"><img src="'+large_file+'"></div>');
             jQuery("#enlarged img").css("max-height",max_height+"px");
-            console.log("max_height="+max_height);
             jQuery("#enlarged").click(function(evt){
                 if ( evt.target.tagName == 'IMG' )
                     jQuery(evt.target).parent().remove();
@@ -36,10 +35,8 @@ function paraviewer(target,format,docid)
                     jQuery(evt.target).remove();
             });
         });
-        });
-    } else {
-        alert("Sorry! No Web Storage support for para");
-    }
+        t.css("visibility","visible");
+    });
 }
 function get_one_param( params, name )
 {
@@ -59,7 +56,7 @@ function get_one_param( params, name )
 function getParaArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('para_params');
+    var module_params = jQuery("#para_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -98,20 +95,18 @@ function getParaArgs( scrName )
     }
     if ( !('docid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }
     if ( !('format' in params) )
         params['format'] = 'text/x-markdown';
-    if ( !('target' in params) )
-        params['target'] = 'tabs-content';
     return params;
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    // DOM Ready - do your stuff 
     var params = getParaArgs('para');
-    var viewer = new paraviewer(params['target'],params['format'],params['docid']);
+    jQuery("#"+params['mod-target']).css("visibility","hidden");
+    var viewer = new paraviewer(params['mod-target'],params['format'],params['docid']);
 }); 
 

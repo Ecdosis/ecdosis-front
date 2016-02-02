@@ -415,7 +415,7 @@ function get_one_param( params, name )
 function getWorksArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('works_params');
+    var module_params = jQuery("#works_params").val();
     if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
@@ -454,7 +454,7 @@ function getWorksArgs( scrName )
     }
     if ( !('projid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['projid'] = get_one_param(tabs_params,'docid');
     }
@@ -462,13 +462,8 @@ function getWorksArgs( scrName )
 }
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
-    if(typeof(Storage) === "undefined") {
-        alert("this page requires HTML5 web storage");
-    }
-    else {
-        var params = getWorksArgs('works');
-        var projid = (params['projid']==undefined)?"english/harpur":params['projid'];
-        jQuery("#"+params['mod-target']).css("visibility","hidden");
-        var w = new works(params['mod-target'],params['title'],projid);
-    }
+    var params = getWorksArgs('works');
+    var projid = (params['projid']==undefined)?"english/harpur":params['projid'];
+    jQuery("#"+params['mod-target']).css("visibility","hidden");
+    var w = new works(params['mod-target'],params['title'],projid);
 }); 
