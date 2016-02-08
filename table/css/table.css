@@ -1,0 +1,33 @@
+span.inserted {
+    color: #00F;
+    position: relative;
+}
+td {
+  white-space:nowrap;
+}
+.siglumleft { 
+  font-weight:bold;
+  white-space:nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#sigla {
+    float:left;
+    width:12%;
+}
+#table-wrapper { 
+  float:left;
+  position:relative;
+  overflow-x:hidden;
+  width:88% 
+}
+#slider {
+  clear:both;
+  position:relative;
+  top:auto;
+  bottom:0px;
+  margin-bottom:.5em;
+  margin-left:auto;
+  margin-right:auto 
+}
+

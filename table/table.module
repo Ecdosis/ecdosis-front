@@ -6,7 +6,11 @@ function table_preprocess_page(&$vars)
     }
     else if ( strpos(request_uri(),"table") )
     {
+        drupal_add_css(drupal_get_path('module','table').'/css/jquery-ui.css','file');
+        drupal_add_css(drupal_get_path('module','table').'/css/jquery-ui.structure.min.css','file');
+        drupal_add_css(drupal_get_path('module','table').'/css/jquery-ui.theme.min.css','file');
         drupal_add_css(drupal_get_path('module','table').'/css/table.css','file');
+        drupal_add_js(drupal_get_path('module','table').'/js/jquery-ui.min.js','file');
     }
 }
 function table_block_info() {
@@ -45,7 +49,7 @@ function build_table_args()
         $args .= '&left='.$_GET['left']; 
     if ( array_key_exists('right',$_GET) )
         $args .= '&right='.$_GET['right']; 
-    if ( strpos($args,'&')==0 )
+    if ( strlen($args)>0 && $args[0]=='&' )
         $args = substr($args,1);
     return $args;
 }

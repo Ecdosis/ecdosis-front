@@ -8,53 +8,167 @@
  */ 
 function table(target,docid,selected,version1,pos)
 {
-    this.docid = docid;
+    /** the docid of the cortex to fetch */
+    this.docid = unescape(docid);
+    /** the id of the element to attach the table to */
     this.target = target;
-    this.pos = parseInt((pos==undefined)?0:pos);
+    /** the base version */
     this.version1 = version1;
+    /** set this for later */
     var self = this;
-    var t = jQuery("#"+target);
-    t.contents().remove();
-    var url = "http://"+window.location.hostname+"/compare/table/info";
-    url += "?docid="+docid;
-    if ( selected != undefined )
-        url += "&selected="+selected;
-    if ( version1 != undefined )
-        url += "&version1="+version1;
-    if ( self.offsets != undefined )
-    {
-        var positions = localStorage.getItem('table_offsets');        
-        if ( positions != null )
-        {
-            if ( positions['docid'] != self.docid )
-                positions['offsets'] = undefined;
-            else
-                self.offsets = positions['offsets'];                
-        }
-    }
-    else
-    {
-        jQuery.get( url, function(data) {
-            if ( self.pos == 0 )
-            {
-                self.left = 0;
-                self.right = self.min(self.pos+150,data.length-1);
-            }
-            else
-            {
-                self.left = self.max(self.pos-50,0);
-                self.right = self.min(self.pos+150,data.length-1);
-            }
-            self.offsets = data;
-            var end = (self.right < data.length)?data[self.right+1]:2147483647;
-            self.fetchTable(data[self.left],end);
-        });
-    }
+    /**
+     * Find the min of 2 values
+     */
     this.min = function(a,b) {
         return (a<b)?a:b;
     };
+    /**
+     * Find the max of 2 values
+     */
     this.max = function(a,b) {
         return (a>b)?a:b;
+    };
+    /**
+     * Test if a variable is undefined, null or an empty string
+     * @return true if it is completely epty
+     */
+    this.isEmpty = function(item) {
+        return item==undefined||item==null
+            ||((typeof item==='string')&&item.length==0);
+    };
+    /**
+     * Generate the html for a table cell based on its json defn
+     * @return html for the cell
+     */
+    this.addCell = function(cell) {
+        var html = '<td';
+        if ( 'class' in cell )
+            html += ' class="'+cell.class+'"';
+        html += '>';
+        for ( var k=0;k<cell.segments.length;k++ )
+        {
+            var seg = cell.segments[k];
+            if ( 'class' in seg )
+                html += '<span class="'+seg.class+'">';
+            html += seg.text;
+            if ( 'class' in seg )
+                html += '</span>';
+        }
+        return html;
+    };
+    /**
+     * Get an estimate of the table's width for the slider's max value
+     * @return the precise width if all of it is visible else an estimate
+     */
+    this.totalPixelWidth = function() {
+        var cRight = this.getRightOffset();
+        var cLeft = this.getLeftOffset();
+        var vWidth = jQuery("#table-wrapper").width();
+        var tWidth = jQuery("#table-wrapper table").width();
+        if ( this.offsets.length==2 )
+            return Math.round(tWidth-vWidth);
+        else
+        {
+            var baselen = this.offsets[this.offsets.length-1];
+            return Math.round(tWidth*(baselen/(cRight-cLeft))-vWidth);
+        }
+    };
+    /**
+     * Get the greatest value in a list less than a value
+     * @param list a sorted json array of integers
+     * @param value the value less than the biggest value
+     * @return the index of the least value in list greater than value
+     */
+    this.getNearestValue = function( list, value ) {
+        var top = 0;
+        var bot = list.length-1;
+        var mid=0;
+        while ( top <= bot )
+        {
+            mid = Math.floor((top+bot)/2); 
+            if ( value < list[mid] )
+            {
+                if ( mid == 0 )
+                    // value < than first item
+                    return -1;  
+                else
+                    bot = mid-1;
+            }
+            else    // value >= list[mid]
+            {
+                if ( mid == list.length-1 )
+                    // value is >= last item
+                    break;
+                else if  ( value >= list[mid+1] )
+                    top = mid+1;
+                else // list[mid] must be biggest <= value
+                    break;
+            }
+        }
+        return mid;
+    };
+    /**
+     * Compute the total width of a range of table cells
+     * @param from the index (starting at 1) of the first cell
+     * @param to the index of the final cell
+     * @return the total width of the cells in pixels
+     */
+    this.measureCells = function(from,to) {
+        var row1 = jQuery( "#table-wrapper tr").first();
+        var total = 0;
+        row1.children("td").each(function(i){
+            if ( i >= from && i <= to )
+                total += jQuery(this).width();
+        });
+        return total;
+    };
+    /**
+     * Set left and right indices in the offsets array from the slider
+     */
+    this.setLeftAndRight = function() {
+        var value = jQuery("#slider").slider("value");
+        this.left = this.getNearestValue(this.positions,value);
+        this.right = this.left+1;
+    };
+    this.getLeftOffset = function() {
+        return this.offsets[this.left];
+    };
+    this.getRightOffset = function() {
+        return this.offsets[this.offsets.length-1];
+    };
+    /**
+     * Install the slider once the table has initially loaded
+     */
+    this.installSlider = function() {
+        jQuery("#"+this.target).append('<div id="slider"></div>');
+        var maxLength = this.totalPixelWidth();
+        jQuery("#slider").slider({
+            min:0,
+            max:maxLength,
+            /* called when we slide but don't release */
+            slide:function(){
+                var value = jQuery("#slider").slider("value");
+                value -= self.positions[self.left];
+                jQuery("#table-wrapper table").css("margin-left",-value+"px");
+            },
+            /* called when we release the mouse */
+            stop: function() {
+                var value = jQuery("#slider").slider("value");
+                var tWidth = jQuery("#table-wrapper table").width();
+                var vWidth = jQuery("#table-wrapper").width();
+                if ( value > tWidth )
+                {
+                    self.setLeftAndRight();
+                    self.fetchTable(self.getLeftOffset(),self.getRightOffset());
+                    value -= self.positions[self.left];
+                }
+                else if ( value > tWidth-vWidth )
+                {
+                    
+                }
+                jQuery("#table-wrapper table").css("margin-left",-value+"px");
+            }
+        });
     };
     /**
      * Fetch a section of the table and install it
@@ -62,15 +176,122 @@ function table(target,docid,selected,version1,pos)
      * @param right the rightmost offset in base or Java Integer.MAX_VALUE
      */
     this.fetchTable = function(left,right) {
+        console.log("left="+left+" right="+right);
         var url = "http://"+window.location.hostname+"/compare/table/json"
         var length = right-left;
-        url2 += "?docid="+self.docid+"&offset="+left+"&length="+length;
+        url += "?docid="+self.docid+"&offset="+left+"&length="+length;
         if ( self.version1 != undefined )
-            url2 += "&version1="+self.version1;
-        jQuery.get(url2,function(data) {
-            jQuery("#"+self.target).append(self.tableToHtml(data));
-        });
+            url += "&version1="+self.version1;
+        jQuery.get(url,function(data) {
+            var t = jQuery("#"+self.target);
+            t.find("table").remove();
+            t.prepend(self.tableToHtml(data.rows));
+            var sWidth = jQuery("#sigla").width();
+            jQuery(".siglumleft").css("width",sWidth+"px");
+            jQuery(".siglumleft").css("max-width",sWidth+"px");
+            jQuery(".siglumleft").each(function(){
+                var t = jQuery(this);
+                t.attr("title",t.text());
+            });
+            var tWidth = jQuery("#table-wrapper table").width();
+            if ( self.positions == undefined )
+            {
+               self.positions = [];
+               self.positions[0] = 0;
+            }
+            self.positions[self.right] = tWidth+self.positions[self.left];
+            if ( jQuery("#slider").length==0 )
+                self.installSlider();
+            if ( self.right == self.offsets.length-1 )
+                jQuery("#slider").slider({max:self.positions[self.right]});
+        }).fail(function(jqXHR, textStatus, err){alert(err)});
     };
+    /**
+     * Convert a table-section from json to HTML
+     * @param jArray an array of segments
+     * @return a html representation of the table
+     */
+    this.tableToHtml = function(jArray) {
+        // left fixed column first
+        // for each row add the first cell
+        var html = '<div id="sigla"><table>';
+        for ( var i=0;i<jArray.length;i++ )
+        {
+            var cell = jArray[i].cells[0];
+            html += '<tr>';
+            html += self.addCell(cell);
+            html += '</tr>';
+        }
+        html += '</table></div>';
+        // main scrolling table
+        html += '<div id="table-wrapper"><table>';
+        for ( var i=0;i<jArray.length;i++ )
+        {
+            html += '<tr>';
+            var row = jArray[i];
+            // skip first cell
+            for ( var j=1;j<row.cells.length;j++ )
+                html += self.addCell(row.cells[j]);
+            html += '</tr>';
+        } 
+        html += '</table></div>';
+        return html;
+    };
+    /**
+     * Set up left and right initially and fetch first copy of the table
+     */
+    this.setupAndFetch = function(){
+        this.left = 0;
+        this.right = 1;
+        this.fetchTable(this.getLeftOffset(),this.getRightOffset());
+    };
+    // now set everything up
+    var pe = jQuery("#positions");
+    var de = jQuery("#docid");
+    var positions;
+    var local_docid;
+    if ( de.length == 0 )
+    {
+        jQuery(document.body).append('<input type="hidden" id="docid"></input>');
+        de = jQuery("#docid");
+    }
+    else
+        local_docid = de.val();
+    if ( pe.length == 0 )
+    {
+        jQuery(document.body).append('<input type="hidden" id="positions"></input>');
+        pe = jQuery("#positions");
+    }
+    else
+        positions = pe.val();
+    if ( positions != undefined )
+    {
+        self.offsets = JSON.parse(positions);
+    }
+    if ( !this.isEmpty(local_docid) && this.isEmpty(docid) )
+        this.docid = local_docid;
+    else
+        de.val(this.docid);
+    if ( this.isEmpty(this.offsets) )
+    {
+        var url = "http://"+window.location.hostname+"/compare/table/info";
+        url += "?docid="+this.docid;
+        if ( selected != undefined )
+            url += "&selected="+selected;
+        if ( version1 != undefined )
+            url += "&version1="+version1;
+        jQuery.get( url, function(data) {
+            self.offsets = data;
+            pe.val(JSON.stringify(data));
+            self.setupAndFetch();
+        });
+    }
+    else
+    {
+        this.left = 0;
+        this.right = 1;
+        this.fetchTable(this.getLeftOffset(),this.getRightOffset());
+    }
 }
 function get_one_param( params, name )
 {
@@ -90,8 +311,8 @@ function get_one_param( params, name )
 function getTableArgs( scrName )
 {
     var params = new Object ();
-    var module_params = localStorage.getItem('table_params');
-    if ( module_params != null && module_params.length>0 )
+    var module_params = jQuery("#table_params").val();
+    if ( module_params != undefined && module_params.length>0 )
     {
         var parts = module_params.split("&");
         for ( var i=0;i<parts.length;i++ )
@@ -129,10 +350,12 @@ function getTableArgs( scrName )
     }
     if ( !('docid' in params) )
     {
-        var tabs_params = localStorage.getItem('tabs_params');
+        var tabs_params = jQuery("#tabs_params").val();
         if ( tabs_params != null && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }
+    if ( !('target' in params) && 'mod-target' in params )
+        params['target'] = params['mod-target'];
     return params;
 }
 /**
@@ -141,7 +364,7 @@ function getTableArgs( scrName )
 jQuery(document).ready(
     function(){
         var params = getTableArgs('table');
-        new table(params['mod-target'],params['docid'],params['selected'],
+        new table(params['target'],params['docid'],params['selected'],
             params['version1'],params['pos']);
     }
 );
