@@ -57,82 +57,25 @@ function table(target,docid,selected,version1,pos)
         return html;
     };
     /**
-     * Get an estimate of the table's width for the slider's max value
+     * Get the precise width of the table for the slider's max value
      * @return the precise width if all of it is visible else an estimate
      */
     this.totalPixelWidth = function() {
-        var cRight = this.getRightOffset();
-        var cLeft = this.getLeftOffset();
         var vWidth = jQuery("#table-wrapper").width();
         var tWidth = jQuery("#table-wrapper table").width();
-        if ( this.offsets.length==2 )
-            return Math.round(tWidth-vWidth);
-        else
-        {
-            var baselen = this.offsets[this.offsets.length-1];
-            return Math.round(tWidth*(baselen/(cRight-cLeft))-vWidth);
-        }
+        return Math.round(tWidth-vWidth);
     };
     /**
-     * Get the greatest value in a list less than a value
-     * @param list a sorted json array of integers
-     * @param value the value less than the biggest value
-     * @return the index of the least value in list greater than value
+     * Get the left character offset of the table in the base version
+     * @return an int
      */
-    this.getNearestValue = function( list, value ) {
-        var top = 0;
-        var bot = list.length-1;
-        var mid=0;
-        while ( top <= bot )
-        {
-            mid = Math.floor((top+bot)/2); 
-            if ( value < list[mid] )
-            {
-                if ( mid == 0 )
-                    // value < than first item
-                    return -1;  
-                else
-                    bot = mid-1;
-            }
-            else    // value >= list[mid]
-            {
-                if ( mid == list.length-1 )
-                    // value is >= last item
-                    break;
-                else if  ( value >= list[mid+1] )
-                    top = mid+1;
-                else // list[mid] must be biggest <= value
-                    break;
-            }
-        }
-        return mid;
-    };
-    /**
-     * Compute the total width of a range of table cells
-     * @param from the index (starting at 1) of the first cell
-     * @param to the index of the final cell
-     * @return the total width of the cells in pixels
-     */
-    this.measureCells = function(from,to) {
-        var row1 = jQuery( "#table-wrapper tr").first();
-        var total = 0;
-        row1.children("td").each(function(i){
-            if ( i >= from && i <= to )
-                total += jQuery(this).width();
-        });
-        return total;
-    };
-    /**
-     * Set left and right indices in the offsets array from the slider
-     */
-    this.setLeftAndRight = function() {
-        var value = jQuery("#slider").slider("value");
-        this.left = this.getNearestValue(this.positions,value);
-        this.right = this.left+1;
-    };
     this.getLeftOffset = function() {
         return this.offsets[this.left];
     };
+    /**
+     * Get the right character position in the base version
+     * @return one after the right side char position
+     */
     this.getRightOffset = function() {
         return this.offsets[this.offsets.length-1];
     };
@@ -154,18 +97,7 @@ function table(target,docid,selected,version1,pos)
             /* called when we release the mouse */
             stop: function() {
                 var value = jQuery("#slider").slider("value");
-                var tWidth = jQuery("#table-wrapper table").width();
-                var vWidth = jQuery("#table-wrapper").width();
-                if ( value > tWidth )
-                {
-                    self.setLeftAndRight();
-                    self.fetchTable(self.getLeftOffset(),self.getRightOffset());
-                    value -= self.positions[self.left];
-                }
-                else if ( value > tWidth-vWidth )
-                {
-                    
-                }
+                value -= self.positions[self.left];
                 jQuery("#table-wrapper table").css("margin-left",-value+"px");
             }
         });
@@ -176,7 +108,6 @@ function table(target,docid,selected,version1,pos)
      * @param right the rightmost offset in base or Java Integer.MAX_VALUE
      */
     this.fetchTable = function(left,right) {
-        console.log("left="+left+" right="+right);
         var url = "http://"+window.location.hostname+"/compare/table/json"
         var length = right-left;
         url += "?docid="+self.docid+"&offset="+left+"&length="+length;
@@ -194,16 +125,15 @@ function table(target,docid,selected,version1,pos)
                 t.attr("title",t.text());
             });
             var tWidth = jQuery("#table-wrapper table").width();
+            var vWidth = jQuery("#table-wrapper").width();
             if ( self.positions == undefined )
             {
                self.positions = [];
                self.positions[0] = 0;
             }
-            self.positions[self.right] = tWidth+self.positions[self.left];
+            self.positions[self.right] = tWidth+self.positions[self.left]-vWidth;
             if ( jQuery("#slider").length==0 )
                 self.installSlider();
-            if ( self.right == self.offsets.length-1 )
-                jQuery("#slider").slider({max:self.positions[self.right]});
         }).fail(function(jqXHR, textStatus, err){alert(err)});
     };
     /**
@@ -242,7 +172,7 @@ function table(target,docid,selected,version1,pos)
      */
     this.setupAndFetch = function(){
         this.left = 0;
-        this.right = 1;
+        this.right = this.offsets.length-1;
         this.fetchTable(this.getLeftOffset(),this.getRightOffset());
     };
     // now set everything up
@@ -289,7 +219,7 @@ function table(target,docid,selected,version1,pos)
     else
     {
         this.left = 0;
-        this.right = 1;
+        this.right = this.offsets.length-1;
         this.fetchTable(this.getLeftOffset(),this.getRightOffset());
     }
 }
