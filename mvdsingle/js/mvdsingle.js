@@ -258,6 +258,13 @@ function getMVDArgs( scrName )
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['docid'] = get_one_param(tabs_params,'docid');
     }
+    if ( !('mod-target' in params) )
+    {
+        if ( 'target' in params )
+            params['mod-target'] = params['target'];
+        else
+            params['mod-target'] = 'content';
+    }
     return params;
 }
 /* main entry point - gets executed when the page is loaded */

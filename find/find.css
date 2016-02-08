@@ -1,5 +1,20 @@
-#search_button { font-family: FontAwesome !important; display:inline-block; margin: 2px 0px; padding: 6px; }
-#finder { text-align:center; width: 100%; margin-bottom: 20px; }
-#query { display:inline-block }
-.match { background-color: #ffff99 }
-#proj_title { font-size: 1.5em }
+#search_button { 
+  font-family: FontAwesome !important; 
+  display:inline-block; 
+  margin: 2px 0px; 
+  padding: 6px; 
+}
+#finder { 
+  text-align:center; 
+  width: 100%; 
+  margin-bottom: 20px; 
+}
+#query { 
+  display:inline-block 
+}
+.match { 
+  background-color: #ffff99 
+}
+#proj_title { 
+  font-size: 1.5em 
+}
