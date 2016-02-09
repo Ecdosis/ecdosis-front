@@ -103,9 +103,97 @@ function table(target,docid,selected,version1,pos)
         });
     };
     /**
+     * Sort the rows by the order given in the project version list
+     * @param list the project versions
+     * @param rows the rows returned by the table function
+     */
+    this.sortByList = function(list,rows) {
+        var newrows = Array();
+        // extract sigla
+        var sigla = Array();
+        for ( var j=0;j<rows.length;j++ )
+        {
+            var siglum = rows[j].cells[0].segments[0].text;
+            sigla[siglum] = j;
+        } 
+        var m = 0;
+        for ( var i=0;i<list.length;i++ )
+        {
+            var vObj = list[i];
+            for ( var k in vObj )
+            {
+                if ( k in sigla )
+                {
+                    newrows[m++] = rows[sigla[k]];
+                    rows[sigla[k]] = null;
+                }
+            }
+        }
+        // make sure all original rows are copied over
+        for ( var i=0;i<rows.length;i++ )
+            if ( rows[i] != null )
+                newrows.push(rows[i]);
+        return newrows;
+    };
+    /**
+     * Clear out the old bring in the new table
+     * @param rows the rows from the compare service
+     */
+    this.installRows = function( rows ) {
+        var t = jQuery("#"+self.target);
+        t.find("table").remove();
+        t.prepend(self.tableToHtml(rows));
+        var sWidth = jQuery("#sigla").width();
+        jQuery(".siglumleft").css("width",sWidth+"px");
+        jQuery(".siglumleft").css("max-width",sWidth+"px");
+        jQuery(".siglumleft").each(function(){
+            var t = jQuery(this);
+            t.attr("title",t.text());
+        });
+        var tWidth = jQuery("#table-wrapper table").width();
+        var vWidth = jQuery("#table-wrapper").width();
+        if ( self.positions == undefined )
+        {
+           self.positions = [];
+           self.positions[0] = 0;
+        }
+        self.positions[self.right] = tWidth+self.positions[self.left]-vWidth;
+        if ( jQuery("#slider").length==0 )
+            self.installSlider();
+    };
+    this.isalpha = function(str) {
+        return /^[a-zA-Z()]+$/.test(str);
+    };
+    /**
+     * Get the projectid from the docid - a bit iffy
+     * return the project id
+     */
+    this.projid = function() {
+        var parts = this.docid.split("/");
+        if ( parts.length == 5 || (parts.length>3&&this.isalpha(parts[2])) )
+            return parts[0]+"/"+parts[1]+"/"+parts[2];
+        else if ( parts.length > 1 )
+            return parts[0]+"/"+parts[1];
+        else
+            return this.docid;
+    };
+    /**
+     * Sort the rows based on the first cell and install it
+     * @param rows the rows as returned by the server
+     */
+    this.sortAndInstall = function( rows ) {
+        var url = "http://"+window.location.hostname+"/project/metadata?docid=";
+        url += self.projid();
+        jQuery.get(url,function(metadata){
+            if ( 'versions' in metadata )
+                rows = self.sortByList(metadata.versions,rows);
+            self.installRows(rows);
+        }).fail(function(){self.installRows(rows)});
+    };
+    /**
      * Fetch a section of the table and install it
      * @param left the left offset in base version
-     * @param right the rightmost offset in base or Java Integer.MAX_VALUE
+     * @param right the rightmost offset in base or the right hand edge
      */
     this.fetchTable = function(left,right) {
         var url = "http://"+window.location.hostname+"/compare/table/json"
@@ -114,26 +202,7 @@ function table(target,docid,selected,version1,pos)
         if ( self.version1 != undefined )
             url += "&version1="+self.version1;
         jQuery.get(url,function(data) {
-            var t = jQuery("#"+self.target);
-            t.find("table").remove();
-            t.prepend(self.tableToHtml(data.rows));
-            var sWidth = jQuery("#sigla").width();
-            jQuery(".siglumleft").css("width",sWidth+"px");
-            jQuery(".siglumleft").css("max-width",sWidth+"px");
-            jQuery(".siglumleft").each(function(){
-                var t = jQuery(this);
-                t.attr("title",t.text());
-            });
-            var tWidth = jQuery("#table-wrapper table").width();
-            var vWidth = jQuery("#table-wrapper").width();
-            if ( self.positions == undefined )
-            {
-               self.positions = [];
-               self.positions[0] = 0;
-            }
-            self.positions[self.right] = tWidth+self.positions[self.left]-vWidth;
-            if ( jQuery("#slider").length==0 )
-                self.installSlider();
+            self.sortAndInstall(data.rows);
         }).fail(function(jqXHR, textStatus, err){alert(err)});
     };
     /**
