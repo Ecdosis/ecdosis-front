@@ -128,7 +128,7 @@ function treeviewer(target,docid)
             map['ancnodes'] = ancnodes;
             if ( jQuery("#tree_params").length==0 )
                 jQuery(document).append('<input type="hidden" id="tree_params"></input>');
-            jQueru("#tree_params").val(self.mapToParams(map));
+            jQuery("#tree_params").val(self.mapToParams(map));
             // add in the docid
             var tabs_params = self.paramsToMap(jQUery("#tabs_params").val());
             jQuery('#docid').val(unescape(tabs_params['docid']));
