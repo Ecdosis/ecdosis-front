@@ -1,2 +1,2 @@
-Browse is a Drupal module that uses jquery-ui tabs to display multiple 
-browsable indices. 
+## Browse
+Provides a browseable expanding list with links so the user can navigate through the corpus without having to use search.
