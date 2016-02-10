@@ -57,15 +57,6 @@ function table(target,docid,selected,version1,pos)
         return html;
     };
     /**
-     * Get the precise width of the table for the slider's max value
-     * @return the precise width if all of it is visible else an estimate
-     */
-    this.totalPixelWidth = function() {
-        var vWidth = jQuery("#table-wrapper").width();
-        var tWidth = jQuery("#table-wrapper table").width();
-        return Math.round(tWidth-vWidth);
-    };
-    /**
      * Get the left character offset of the table in the base version
      * @return an int
      */
@@ -80,27 +71,75 @@ function table(target,docid,selected,version1,pos)
         return this.offsets[this.offsets.length-1];
     };
     /**
-     * Install the slider once the table has initially loaded
+     * Extract the sigla from the first column of each row
+     * @param rows a JSON array of rows
+     * @return an array of sigla
      */
-    this.installSlider = function() {
-        jQuery("#"+this.target).append('<div id="slider"></div>');
-        var maxLength = this.totalPixelWidth();
-        jQuery("#slider").slider({
-            min:0,
-            max:maxLength,
-            /* called when we slide but don't release */
-            slide:function(){
-                var value = jQuery("#slider").slider("value");
-                value -= self.positions[self.left];
-                jQuery("#table-wrapper table").css("margin-left",-value+"px");
-            },
-            /* called when we release the mouse */
-            stop: function() {
-                var value = jQuery("#slider").slider("value");
-                value -= self.positions[self.left];
-                jQuery("#table-wrapper table").css("margin-left",-value+"px");
+    this.extractSigla = function(rows) {
+        var sigla = Array();
+        for ( var j=0;j<rows.length;j++ )
+        {
+            var siglum = rows[j].cells[0].segments[0].text;
+            sigla[siglum] = j;
+        }
+        return sigla;
+    };
+    /**
+     * Compare sigla with up to 2 parts
+     * @param s1 the first siglum
+     * @param s2 the second siglum
+     */
+    this.cmpSigla = function(s1,s2) {
+        var p1 = s1.split("/");
+        var p2 = s2.split("/");
+        if ( p1.length>0 && p2.length>0 )
+        {
+            if ( p1[0] > p2[0] )
+                return 1;
+            else if ( p1[0] < p2[0] )
+                return -1;
+            else if ( p1.length>1 && p1.length == p2.length )
+                return  p1[1].localeCompare(p2[1]);
+            else if ( p1.length != p2.length )
+            {
+                if ( p1.length < p2.length )
+                    return -1;
+                else
+                    return 1;
             }
-        });
+        }
+        else
+        {
+             if ( p1.length < p2.length )
+                return -1;
+             else 
+                return 1;
+        }
+    };
+    /**
+     * Sort an array of rows by their sigla
+     */
+    this.sortBySigla = function(rows) {
+        var sigla = this.extractSigla(rows);
+        var keys = [];
+        for (var k in sigla) 
+            keys.push(k);
+        for ( var h = keys.length; h = parseInt(h/2); ) 
+        {
+            for (var i=h; i< keys.length; i++) 
+            {
+                var k = keys[i];
+                for (var j=i; j>=h && self.cmpSigla(k,keys[j-h])<0; j-=h)
+                {
+                    keys[j] = keys[j-h];
+                }
+                keys[j] = k;
+            }
+        }
+        var newrows = Array();
+        for ( var i=0;i<keys.length;i++ )
+            newrows.push( rows[sigla[keys[i]]] );
+        return newrows;
     };
     /**
      * Sort the rows by the order given in the project version list
@@ -109,13 +148,7 @@ function table(target,docid,selected,version1,pos)
      */
     this.sortByList = function(list,rows) {
         var newrows = Array();
-        // extract sigla
-        var sigla = Array();
-        for ( var j=0;j<rows.length;j++ )
-        {
-            var siglum = rows[j].cells[0].segments[0].text;
-            sigla[siglum] = j;
-        } 
+        var sigla = this.extractSigla(rows);
         var m = 0;
         for ( var i=0;i<list.length;i++ )
         {
@@ -158,9 +191,12 @@ function table(target,docid,selected,version1,pos)
            self.positions[0] = 0;
         }
         self.positions[self.right] = tWidth+self.positions[self.left]-vWidth;
-        if ( jQuery("#slider").length==0 )
-            self.installSlider();
     };
+    /** 
+     * Is a string purely alphabetic?
+     * @param str the string to test
+     * @return true if it is else false
+     */
     this.isalpha = function(str) {
         return /^[a-zA-Z()]+$/.test(str);
     };
@@ -187,6 +223,8 @@ function table(target,docid,selected,version1,pos)
         jQuery.get(url,function(metadata){
             if ( 'versions' in metadata )
                 rows = self.sortByList(metadata.versions,rows);
+            else
+                rows = self.sortBySigla(rows);
             self.installRows(rows);
         }).fail(function(){self.installRows(rows)});
     };
