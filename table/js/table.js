@@ -191,6 +191,7 @@ function table(target,docid,selected,version1,pos)
                     if ( !jQuery(this).parent().is(":first-child") )
                         inputs += '<input type="button" class="up" value="▲"></input>';
                     jQuery(this).append('<div>'+inputs+'</div>');
+                    // install handlers to move rows up and down
                     jQuery(this).find(".up").click(function() {
                         var tr = jQuery(this).closest("tr");
                         if ( !tr.is(":first-child") )
@@ -290,6 +291,7 @@ function table(target,docid,selected,version1,pos)
              return "all";
          else
          {
+             var allSelected = true;
              var selected = "";
              jQuery("#dropdown option").each(function(i){
                 var pos = jQuery(this).text().lastIndexOf(" ✓");
@@ -299,8 +301,10 @@ function table(target,docid,selected,version1,pos)
                          selected += ",";
                      selected += jQuery(this).val();
                  }
+                 else if ( allSelected )
+                     allSelected = false;
              });
-             return selected;   
+             return (allSelected)?"all":selected;   
          } 
     };
     /**
@@ -377,8 +381,7 @@ function table(target,docid,selected,version1,pos)
         var url = "http://"+window.location.hostname+"/compare/table/json"
         var length = right-left;
         url += "?docid="+self.docid+"&offset="+left+"&length="+length;
-        if ( jQuery("#some_versions").prop('disabled') == false )
-            url += "&selected="+this.getSelected();
+        url += "&selected="+this.getSelected();
         if ( self.version1 != undefined )
             url += "&version1="+self.version1;
         jQuery.get(url,function(data) {
