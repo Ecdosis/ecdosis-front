@@ -114,7 +114,6 @@ function comparer( target, docid, modpath )
             if ( data != undefined && data.length > 0 )
             {
                 self.version2 = data;
-                console.log("version2="+self.version2);
                 self.getList( self.version2, "version2", 
                     "long_name2", "rightWrapper" );
                 // set content for left hand side
@@ -133,7 +132,6 @@ function comparer( target, docid, modpath )
         jQuery.get( "/compare/version1?docid="+docid, 
             function( data ) {
                 self.version1 = data;
-                console.log("version1="+self.version1);
                 self.getDocTitle();
          })
         .fail( function() {
@@ -325,7 +323,6 @@ function comparer( target, docid, modpath )
                 spanOffset = elem.offset().top;
 	        hash[idAttr] = spanOffset;
             index.push( {offset: spanOffset, id: idAttr} );
-            //console.log("found "+idAttr);
         }
         else if ( elem.children().length > 0 )
 	        this.findIds( elem.children().first(), hash, index );
@@ -367,7 +364,6 @@ function comparer( target, docid, modpath )
                     break;
             }
         }
-        //console.log("value="+value+" mid="+mid);
         return mid;
     }
     /**
@@ -415,7 +411,6 @@ function comparer( target, docid, modpath )
      */
     this.build = function()
     {
-        console.log("build function");
         // first build the framework
         var form = jQuery('<form id="default" action="/compare"></form>').prependTo("#"+this.target);
         form.attr("name", "default" );
