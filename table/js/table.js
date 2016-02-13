@@ -174,7 +174,7 @@ function table(target,docid,selected,version1,pos)
      */
     this.installRows = function( rows ) {
         var t = jQuery("#"+self.target);
-        t.find("table").remove();
+        t.contents().remove();
         t.prepend(self.tableToHtml(rows));
         var sWidth = jQuery("#sigla").width();
         jQuery(".siglumleft").css("width",sWidth+"px");
@@ -229,6 +229,101 @@ function table(target,docid,selected,version1,pos)
         }).fail(function(){self.installRows(rows)});
     };
     /**
+     * Set the title of the page
+     */
+    this.setTitle = function() {
+        var url = "http://"+window.location.hostname+"/compare/title";
+        url += "?docid="+this.docid;
+        jQuery.get(url,function(data){
+            jQuery("#"+self.target).prepend('<div id="work_title">'+data+'</div>');
+        });
+    };
+    /**
+     * Get the selected set of versions
+     * @return "all" or a comma-separated list of versions
+     */
+    this.getSelected = function() {
+         if ( jQuery("#some_versions").prop('disabled') == true )
+             return "all";
+         else
+         {
+             var selected = "";
+             jQuery("#dropdown option").each(function(i){
+                var pos = jQuery(this).text().lastIndexOf(" ✓");
+                 if ( pos != -1 )
+                 {
+                     if ( selected.length>0 )
+                         selected += ",";
+                     selected += jQuery(this).val();
+                 }
+             });
+             return selected;   
+         } 
+    };
+    /**
+     * in keyword doesn't work with lists
+     * @param item the item to lookup
+     * @param list an array of strings
+     * @return true if it is in the list
+     */
+    this.inList = function(item,list){
+        for ( var i=0;i<list.length;i++ )
+            if ( item == list[i] )
+                return true;
+        return false;
+    };
+    /**
+     * Add the toolbar below the table
+     * @param options the options currently in effect
+     */
+    this.addToolbar = function(options){
+        var url = "http://"+window.location.hostname+"/compare/list";
+        url += "?docid="+this.docid+"&name=dropdown";
+        jQuery.get(url,function(data){
+            jQuery("#"+self.target).append('<div id="table_toolbar"></div>');
+            var t = jQuery("#table_toolbar")
+            t.append("<span>some versions</span>");
+            t.append('<input id="some_versions" type="checkbox"></input>');
+            t.append(data);
+            t.append('<input id="rebuild" type="submit" value="rebuild"></input>');
+            jQuery("#some_versions").click(function(){
+               jQuery("#dropdown").prop( "disabled", !jQuery(this).is(':checked') );
+            });
+            if ( 'selected' in options && options.selected != 'all' )
+            {
+                var parts = options.selected.split(",");
+                jQuery("#dropdown option").each(function(i){
+                    if ( self.inList(jQuery(this).val(),parts) )
+                        jQuery(this).text(jQuery(this).text()+" ✓");
+                });
+                jQuery("#dropdown").prop('disabled',false);
+            }
+            else
+            {
+                // initial selection: tick all
+                jQuery("#dropdown option").each(function(i){
+                    jQuery(this).text(jQuery(this).text()+" ✓");
+                });
+                jQuery("#dropdown").prop('disabled',true);
+            }
+            jQuery("#dropdown").change(function(){
+                var pos = this.options[this.selectedIndex].text.lastIndexOf(" ✓");
+                if ( pos != -1 )
+                {
+                    var len = this.options[this.selectedIndex].text.length;
+                    var copy = this.options[this.selectedIndex].text;
+                    this.options[this.selectedIndex].text = copy.substring(0,pos);
+                }
+                else
+                    this.options[this.selectedIndex].text += " ✓";
+            });
+            jQuery("#rebuild").click(function(){
+                self.setupAndFetch();
+            });
+            self.setTitle();
+        }); 
+    };
+    /**
      * Fetch a section of the table and install it
      * @param left the left offset in base version
      * @param right the rightmost offset in base or the right hand edge
@@ -237,10 +332,13 @@ function table(target,docid,selected,version1,pos)
         var url = "http://"+window.location.hostname+"/compare/table/json"
         var length = right-left;
         url += "?docid="+self.docid+"&offset="+left+"&length="+length;
+        if ( jQuery("#some_versions").prop('disabled') == false )
+            url += "&selected="+this.getSelected();
         if ( self.version1 != undefined )
             url += "&version1="+self.version1;
         jQuery.get(url,function(data) {
             self.sortAndInstall(data.rows);
+            self.addToolbar(data.options);
         }).fail(function(jqXHR, textStatus, err){alert(err)});
     };
     /**

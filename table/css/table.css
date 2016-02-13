@@ -30,4 +30,27 @@ td {
   margin-left:auto;
   margin-right:auto 
 }
-
+#table_toolbar {
+  clear:both;
+  text-align:center;
+}
+#dropdown {
+  margin-top:1em;
+  margin-bottom:1em;
+}
+#some_versions {
+  margin-right:1em;
+  margin-left:0.5em;
+}
+#rebuild {
+  margin-left:2em;
+  line-height:1em;
+}
+#work_title {
+  text-align:center;
+  font-size:large;
+  font-weight:bold;
+}
+span.description {
+  display: none;
+}
