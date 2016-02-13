@@ -182,6 +182,49 @@ function table(target,docid,selected,version1,pos)
         jQuery(".siglumleft").each(function(){
             var t = jQuery(this);
             t.attr("title",t.text());
+            t.click(function(){
+                if ( jQuery(this).find("div").length == 0 )
+                {
+                    var inputs = '';
+                    if ( !jQuery(this).parent().is(":last-child") )
+                        inputs += '<input type="button" class="down" value="▼"></input>';
+                    if ( !jQuery(this).parent().is(":first-child") )
+                        inputs += '<input type="button" class="up" value="▲"></input>';
+                    jQuery(this).append('<div>'+inputs+'</div>');
+                    jQuery(this).find(".up").click(function() {
+                        var tr = jQuery(this).closest("tr");
+                        if ( !tr.is(":first-child") )
+                        {
+                            var ind = tr.index();
+                            var mtr = jQuery("#table-wrapper tr").get(ind);
+                            var mprev = jQuery(mtr).prev().detach();
+                            var prev = tr.prev().detach();
+                            prev.insertAfter(tr);
+                            mprev.insertAfter(jQuery(mtr));
+                        }
+                    });
+                    jQuery(this).find(".down").click(function() {
+                        var tr = jQuery(this).closest("tr");
+                        if ( !tr.is(":last-child") )
+                        {
+                            var ind = tr.index();
+                            var mtr = jQuery("#table-wrapper tr").get(ind);
+                            var mnext = jQuery(mtr).next().detach();
+                            var next = tr.next().detach();
+                            mnext.insertBefore(jQuery(mtr));
+                            next.insertBefore(tr);
+                        }
+                    });
+                    var inst = jQuery(this).find("div");
+                    var trw = jQuery("#sigla").width();
+                    var sdw = inst.width();
+                    var loff = Math.round((trw-sdw)/2)+"px";
+                    inst.css("left",loff);
+                    setTimeout(function(){
+                        inst.remove();
+                    },5000);
+                }
+            });
         });
         var tWidth = jQuery("#table-wrapper table").width();
         var vWidth = jQuery("#table-wrapper").width();
@@ -356,6 +399,7 @@ function table(target,docid,selected,version1,pos)
         {
             var cell = jArray[i].cells[0];
             html += '<tr>';
+            cell.segments[0].class="siglum";
             html += self.addCell(cell);
             html += '</tr>';
         }
