@@ -287,25 +287,20 @@ function table(target,docid,selected,version1,pos)
      * @return "all" or a comma-separated list of versions
      */
     this.getSelected = function() {
-         if ( jQuery("#some_versions").prop('disabled') == true )
-             return "all";
-         else
-         {
-             var allSelected = true;
-             var selected = "";
-             jQuery("#dropdown option").each(function(i){
-                var pos = jQuery(this).text().lastIndexOf(" ✓");
-                 if ( pos != -1 )
-                 {
-                     if ( selected.length>0 )
-                         selected += ",";
-                     selected += jQuery(this).val();
-                 }
-                 else if ( allSelected )
-                     allSelected = false;
-             });
-             return (allSelected)?"all":selected;   
-         } 
+         var allSelected = true;
+         var selected = "";
+         jQuery("#dropdown option").each(function(i){
+             var pos = jQuery(this).text().lastIndexOf(" ✓");
+             if ( pos != -1 )
+             {
+                 if ( selected.length>0 )
+                     selected += ",";
+                 selected += jQuery(this).val();
+             }
+             else if ( allSelected )
+                 allSelected = false;
+         });
+         return (allSelected)?"all":selected;   
     };
     /**
      * in keyword doesn't work with lists
@@ -320,6 +315,21 @@ function table(target,docid,selected,version1,pos)
         return false;
     };
     /**
+     * Switch the currently selected dropdown option 
+     * @param select the DOM select element
+     */
+    this.toggleDropdown = function(select) {
+        var pos = select.options[select.selectedIndex].text.lastIndexOf(" ✓");
+        if ( pos != -1 )
+        {
+            var len = select.options[select.selectedIndex].text.length;
+            var copy = select.options[select.selectedIndex].text;
+            select.options[select.selectedIndex].text = copy.substring(0,pos);
+        }
+        else
+            select.options[select.selectedIndex].text += " ✓";
+    };
+    /**
      * Add the toolbar below the table
      * @param options the options currently in effect
      */
@@ -328,14 +338,10 @@ function table(target,docid,selected,version1,pos)
         url += "?docid="+this.docid+"&name=dropdown";
         jQuery.get(url,function(data){
             jQuery("#"+self.target).append('<div id="table_toolbar"></div>');
-            var t = jQuery("#table_toolbar")
-            t.append("<span>some versions</span>");
-            t.append('<input id="some_versions" type="checkbox"></input>');
+            var t = jQuery("#table_toolbar");
             t.append(data);
+            self.selectedVersion = jQuery("#dropdown").val();
             t.append('<input id="rebuild" type="submit" value="rebuild"></input>');
-            jQuery("#some_versions").click(function(){
-               jQuery("#dropdown").prop( "disabled", !jQuery(this).is(':checked') );
-            });
             if ( 'selected' in options && options.selected != 'all' )
             {
                 var parts = options.selected.split(",");
@@ -343,28 +349,20 @@ function table(target,docid,selected,version1,pos)
                     if ( self.inList(jQuery(this).val(),parts) )
                         jQuery(this).text(jQuery(this).text()+" ✓");
                 });
-                jQuery("#dropdown").prop('disabled',false);
-                jQuery("#some_versions").prop('checked',true);
             }
-            else
+            else // all versions chosen
             {
-                // initial selection: tick all
                 jQuery("#dropdown option").each(function(i){
                     jQuery(this).text(jQuery(this).text()+" ✓");
                 });
-                jQuery("#dropdown").prop('disabled',true);
-                jQuery("#some_versions").prop('checked',false);
             }
             jQuery("#dropdown").change(function(){
-                var pos = this.options[this.selectedIndex].text.lastIndexOf(" ✓");
-                if ( pos != -1 )
-                {
-                    var len = this.options[this.selectedIndex].text.length;
-                    var copy = this.options[this.selectedIndex].text;
-                    this.options[this.selectedIndex].text = copy.substring(0,pos);
-                }
-                else
-                    this.options[this.selectedIndex].text += " ✓";
+                self.toggleDropdown(this);
+                self.selectedVersion = jQuery(this).val();
+            });
+            jQuery("#dropdown").mouseup(function(){
+                if ( jQuery(this).val() == self.selectedVersion )
+                   self.toggleDropdown(this);                     
             });
             jQuery("#rebuild").click(function(){
                 self.setupAndFetch();
