@@ -297,6 +297,7 @@ function table(target,docid,selected,version1,pos)
                         jQuery(this).text(jQuery(this).text()+" ✓");
                 });
                 jQuery("#dropdown").prop('disabled',false);
+                jQuery("#some_versions").prop('checked',true);
             }
             else
             {
@@ -305,6 +306,7 @@ function table(target,docid,selected,version1,pos)
                     jQuery(this).text(jQuery(this).text()+" ✓");
                 });
                 jQuery("#dropdown").prop('disabled',true);
+                jQuery("#some_versions").prop('checked',false);
             }
             jQuery("#dropdown").change(function(){
                 var pos = this.options[this.selectedIndex].text.lastIndexOf(" ✓");
