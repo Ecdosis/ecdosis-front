@@ -43,7 +43,6 @@ html, body {
     margin: 0px;
 }
 div.bio img {
-    max-width: 80%;
     max-height: 400px;
     display: block;
     margin-left: auto;
@@ -54,3 +53,9 @@ div.bio img {
 #years {display:inline;margin-left:20px;line-height:18px}
 #timeline-toolbar {display:inline}
 #biography {padding-left:10%;padding-right:10%}
+#poppedup {position:relative;margin-left:auto;margin-right:auto;margin-top:1em;margin-bottom:1em}
+#poppedup i.fa {top:0;left:100%;transform:translateX(-100%);z-index:1;position:absolute;display:block;opacity:.5;}
+i.fa-expand {color:blue}
+i.fa-compress {color:white}
+#poppedup i.fa:hover {cursor:pointer}
+#poppedup img {z-index:-10;position:absolute;margin:auto;display:block}
