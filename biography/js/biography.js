@@ -671,74 +671,72 @@ function biography(target,docid,modpath) {
             html += self.pasteYear(curr_year,body,refs);
         jQuery("#"+target).children().remove();
         jQuery("#"+target).append(html);  
-    // animate pictures
-    jQuery("a.corpix").click(function(e){
-        var pu = jQuery("#poppedup");
-        if ( pu.length>0 )
-            pu.remove();
-        var a = jQuery(this);
-        if ( !a.is("a") )
-            a = a.parent();
-        var url = a.attr("title");
-        var alt = a.data("alt");
-        if ( alt == undefined )
-            alt="click to remove";
-        var button = '<i id="ms-fullscreen" class="fa fa-2x fa-expand"></i>';
-        a.before('<div title="'+alt+'" id="poppedup">'+button+'<img src="'+url+'"></div>');
-        jQuery("#poppedup img").css("visibility","invisible");
-        jQuery("#poppedup img").load(function(){
-            var maxHt = jQuery(this).css('maxHeight').replace(/[^-\d\.]/g, '');
-            maxHt = parseInt(maxHt);
-            var ht = jQuery(this).height();
-            var wd = jQuery(this).width();
-            if ( ht>maxHt )
-                wd = Math.round(maxHt*wd/ht);
-            ht = (ht>maxHt)?maxHt:ht;
-            jQuery("#poppedup").css("height",ht+"px");
-            jQuery("#poppedup").css("width",wd+"px");
-            jQuery(this).css("visibility","visible");
+        // animate pictures
+        jQuery("a.corpix").click(function(e){
+            var pu = jQuery("#poppedup");
+            if ( pu.length>0 )
+                pu.remove();
+            var a = jQuery(this);
+            if ( !a.is("a") )
+                a = a.parent();
+            var url = a.attr("title");
+            var alt = a.data("alt");
+            if ( alt == undefined )
+                alt="click to remove";
+            var button = '<i id="ms-fullscreen" class="fa fa-2x fa-expand"></i>';
+            a.before('<div title="'+alt+'" id="poppedup">'+button+'<img src="'+url+'"></div>');
+            jQuery("#poppedup img").css("visibility","invisible");
+            jQuery("#poppedup img").load(function(){
+                var maxHt = jQuery(this).css('maxHeight').replace(/[^-\d\.]/g, '');
+                maxHt = parseInt(maxHt);
+                var ht = jQuery(this).height();
+                var wd = jQuery(this).width();
+                if ( ht>maxHt )
+                    wd = Math.round(maxHt*wd/ht);
+                ht = (ht>maxHt)?maxHt:ht;
+                jQuery("#poppedup").css("height",ht+"px");
+                jQuery("#poppedup").css("width",wd+"px");
+                jQuery(this).css("visibility","visible");
+            });
+            jQuery("#poppedup").click(function(){
+                jQuery(this).remove();
+            });
+            jQuery("#poppedup i.fa").click( function(e){
+                e.stopPropagation();
+                // if already full screen; exit
+                // else go fullscreen
+                if ( document.fullscreenElement ||
+                    document.webkitFullscreenElement ||
+                    document.mozFullScreenElement ||
+                    document.msFullscreenElement ) 
+                {
+                    if (document.exitFullscreen)
+                        document.exitFullscreen();
+                    else if (document.mozCancelFullScreen)
+                        document.mozCancelFullScreen();
+                    else if (document.webkitExitFullscreen)
+                        document.webkitExitFullscreen();
+                    else if (document.msExitFullscreen) 
+                        document.msExitFullscreen();
+                }
+                else
+                {
+                    var jElem = jQuery('#poppedup');
+                    element = jElem.get(0);
+                    var img = jElem.find("img");
+                    img.css("maxHeight","100%");
+                    if (element.requestFullscreen) 
+                        element.requestFullscreen();
+                    else if (element.mozRequestFullScreen) 
+                        element.mozRequestFullScreen();
+                    else if (element.webkitRequestFullscreen)
+                        element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                    else if (element.msRequestFullscreen) 
+                        element.msRequestFullscreen();
+                }
+            });
+            e.preventDefault();
         });
-        jQuery("#poppedup").click(function(){
-            jQuery(this).remove();
-        });
-        jQuery("#poppedup i.fa").click( function(e){
-            e.stopPropagation();
-            // if already full screen; exit
-            // else go fullscreen
-            if ( document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.mozFullScreenElement ||
-                document.msFullscreenElement ) 
-            {
-                if (document.exitFullscreen)
-                    document.exitFullscreen();
-                else if (document.mozCancelFullScreen)
-                    document.mozCancelFullScreen();
-                else if (document.webkitExitFullscreen)
-                    document.webkitExitFullscreen();
-                else if (document.msExitFullscreen) 
-                    document.msExitFullscreen();
-                jQuery("#ms-fullscreen").attr("class","fa fa-2x fa-expand");
-            }
-            else
-            {
-                var jElem = jQuery('#poppedup');
-                element = jElem.get(0);
-                var img = jElem.find("img");
-                img.css("maxHeight","100%");
-                if (element.requestFullscreen) 
-                    element.requestFullscreen();
-                else if (element.mozRequestFullScreen) 
-                    element.mozRequestFullScreen();
-                else if (element.webkitRequestFullscreen)
-                    element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                else if (element.msRequestFullscreen) 
-                    element.msRequestFullscreen();
-                jQuery("#ms-fullscreen").attr("class","fa fa-2x fa-compress");
-            }
-        });
-        e.preventDefault();
-    });
         jQuery("#"+self.target).css("visibility","visible");
     });
 }

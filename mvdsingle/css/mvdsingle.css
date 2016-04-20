@@ -1,3 +1,20 @@
 #main-mvdsingle {width:600px;margin-left:auto;margin-right:auto;margin-bottom:10px}
 #list {margin-bottom:8px}
 #temp-message {color: #2883DE}
+#ratings {position: inline-block;width:18em;text-align:right;float:right;font-size:13px}
+.stars { color: #2883DE }
+.slidingDiv {
+    display:none;
+}
+.a{
+    font: 2em Arial;
+    text-decoration: none
+}
+#body {width:70%}
+#plus i {color:grey}
+.username {font-weight: bold }
+.userscore {text-align:left;margin-bottom:0.25em;margin-top:0.5em}
+.userscore .stars {float:right}
+.review {text-align:left}
+.edit_icon { margin-left:1em}
+#user_review_box { height: 8em;width:100%; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;}

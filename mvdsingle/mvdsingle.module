@@ -2,7 +2,6 @@
 /**
  * @file
  * A block module that displays a single version of an MVD at a time.
- * This is just a minimal wrapper for the object defined in mvdsingle.js
  */
 function mvdsingle_preprocess_page(&$vars)
 {
@@ -12,6 +11,7 @@ function mvdsingle_preprocess_page(&$vars)
             .'/css/mvdsingle.css','file');
         /* set default project id (to enable random docid calculation) */
         $projid = variable_get('mvdsingle_projid');
+        /* I don't think this is needed any more */
         drupal_add_js(
             "jQuery(document).ready(function (){if(typeof(Storage)==='undefined')"
             ."{alert('this page requires HTML5 web storage');}else"
@@ -38,9 +38,27 @@ function mvdsingle_all()
 {
     $mod_path = drupal_get_path('module', 'mvdsingle');
     $args = build_mvd_args();
-    $src = $mod_path.'/mvdsingle.js?';
+    $src = $mod_path.'/js/mvdsingle.js?';
     $html ='<script type="text/javascript" src="'.$src.$args.'"></script>';
     return $html;
+}
+/**
+ * Implements hook_block_view(). Produces the contents of the block.
+ * @param delta the name of the module
+ * @return a key-value array
+ */
+function mvdsingle_block_view($delta = '')
+{
+    switch ($delta)
+    {
+        case 'mvdsingle':
+            $mod_path = drupal_get_path('module', 'mvdsingle');
+            $args = build_mvd_args();
+            $block['content'] = '<script type="text/javascript" src="'
+                .$mod_path.'/js/mvdsingle.js?'.$args.'"></script>';
+            return $block;
+    }
+    // else there is nothing to do
 }
 function mvdsingle_menu()
 {
@@ -81,24 +99,6 @@ function mvdsingle_help($path, $arg) {
                 . '</p>';
             break;
     }
-}
-/**
- * Implements hook_block_view(). Produces the contents of the block.
- * @param delta the name of the module
- * @return a key-value array
- */
-function mvdsingle_block_view($delta = '') 
-{
-    switch ($delta) 
-    {
-        case 'mvdsingle':
-	    $mod_path = drupal_get_path('module', 'mvdsingle');
-            $args = build_mvd_args();
-            $block['content'] = '<script type="text/javascript" src="'
-                .$mod_path.'/js/mvdsingle.js?'.$args.'"></script>';
-            return $block;
-    }
-    // else there is nothing to do
 }
 /**
  * Page callback: Compare settings

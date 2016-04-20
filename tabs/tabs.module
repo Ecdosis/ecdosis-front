@@ -93,6 +93,50 @@ function get_missing_tabset( $module )
     return $tabset;
 }
 /**
+ * Compose a JSON string describing the current user for later encryption
+ * @return a JSON string contain roles and user name
+ */
+function get_userdata()
+{
+    global $user;
+    if ( $user )
+    {
+        $udata = "{\"name\":";
+        $udata .= "\"".$user->name."\",\"roles\": [";
+        foreach ( $user->roles as $role )
+        {
+            if ( $udata[strlen($udata)-1]!='[' )
+                $udata .= ",";
+            $udata .= "\"".$role."\"";
+        }
+        $udata .= "]}";
+        return $udata;
+    }
+    else
+        return "{\"name\":\"guest\",\"roles\":[]}";
+}
+/**
+ * A simple and custom scrambling function for user data
+ * @paramt $text the text to scramble
+ * @return a scrmabled version thereof
+ */
+function scramble( $text )
+{
+    $key = "I tell a settlers tale of the old times";
+    $enciphered = "";
+    $klen = strlen($key);
+    $tlen = strlen($text);
+    for ( $i=0;$i<$tlen;$i++ )
+        $enciphered .= $text[$i] ^ $key[$i%$klen];
+    $b64 = base64_encode($enciphered);
+/*  $orig = base64_decode($b64);
+    $deciphered = "";
+    $olen = strlen($enciphered);
+    for ( $i=0;$i<$olen;$i++ )
+        $deciphered .= $enciphered[$i] ^ $key[$i%$klen];*/
+    return $b64;
+}
+/**
  * Build the tabs specific parameters from various sources
  * @param &$args reference to the parameters array beuing built
  * @return the paremeters as a string, separated by "&" (no leading ?)
@@ -115,6 +159,7 @@ function compose_tabs_params( &$args )
         $args['tabset'] = get_missing_tabset( $args['module'] );
         get_tabset_params($args['tabset'],$args);
     }
+    $args['udata'] = scramble(get_userdata());
     return array_to_params($args);
 }
 /**
@@ -289,11 +334,12 @@ function tabs_block_view($delta = '') {
       {
           $rest = substr($uri,$pos+1);
           $args = explode("&",$rest);
-          $tabs_params = "?"+compose_tabs_params($args);
+          $pargs = urldecode(compose_tabs_params($args));
+          $tabs_params = "?".$pargs;
       }
       $mod_path = drupal_get_path('module', 'tabs');
-      $block['content'] = '<script type="text/javascript" src="'.$mod_path
-          .'/tabs.js'.$tabs_params.'"></script>';
+      $block['content'] ="";/* '<script type="text/javascript" src="'.$mod_path
+          .'/tabs.js'.$tabs_params.'"></script>';*/
       return $block;
   }
 }

@@ -1,18 +1,232 @@
 /**
+ * Ratings: enter/view ratings and reviews of a work
+ * @param docid the docid of the work being rated
+ * @param userdata encrypted userdata
+ */
+function ratings(docid,userdata)
+{
+    this.docid = decodeURI(docid);
+    this.key = "I tell a settlers tale of the old times";
+    var self = this;
+    this.decode = function( enc ) {
+        var plain = atob(enc);
+        var sb = "";
+        for ( var i=0;i<plain.length;i++ )
+        {
+            var kchar = this.key.charCodeAt(i%this.key.length);
+            var pchr = plain.charCodeAt(i)^kchar;
+            sb += String.fromCharCode(pchr);
+        }
+        return sb;
+    };
+    this.userdata = JSON.parse(this.decode(userdata));
+    /**
+     * Generate a span of possibly fractional stars
+     * @param score the number of stars to display up to 5
+     */
+    this.writeStars = function( score ) {
+        var span = '<span class="stars">';
+        var half_scores = Math.round(score*2.0);
+        for ( i=0;i+1<half_scores;i+=2 )
+            span += '<i class="fa fa-star"></i>';
+        if ( half_scores-i==1 )
+        {
+            i+=2;
+            span += '<i class="fa fa-star-half-empty"></i>';
+        }
+        for ( var j=i;j<10;j+=2 )
+            span += '<i class="fa fa-star-o"></i>';
+        span += '</span>';
+        return span;
+    };
+    /**
+     * Capitalise the first letter of a word
+     * @param word the word to capitalise
+     * @return the word with first letter in uppercase
+     */
+    this.capitalise = function( word ) {
+        if ( word.length>0 )
+            return word.substring(0,1).toUpperCase()+word.substring(1);
+        else
+            return "";
+    };
+    /**
+     * Build an edit form
+     * @param rating the entry in ratings
+     * @return a form-element for editng the rating
+     */
+    this.buildEditForm = function( rating ) {
+        var form = '<form id="edit_rating" method="POST" action="/ratings/">';
+        var stars = self.writeStars(rating.score);
+        var user = self.capitalise(rating.user);
+        var score = '<p class="userscore"><span class="username">'
+            +user+'</span>'+stars+'</p>';
+        form += score;
+        form += '<span id="rating_prompt">Rating: </span>';
+        form += '<select id="user_rating_select" name="score">';
+        for ( var i=1;i<=5;i++ )
+        {
+            form += '<option';
+            if ( rating.score == i )
+                form += ' selected';
+            form += '>'+i+'</option>';
+        }
+        form += '</select>';
+        form += '<textarea name="review" id="user_review_box">';
+        form += rating.review;
+        form += '</textarea>';
+        form += '<input type="hidden" name="user" value="'+rating.user+'"></input>';
+        form += '<input type="button" value="cancel" id="cancel_button"></button>';
+        form += '<input type="button" value="save" id="save_button"></button>';
+        form += '</form>';
+        return form;
+    };
+    /**
+     * Build an ordinary rating (score + review) for display
+     * @param rating the entry in the ratings array
+     * @return a HTML representation of the rating
+     */
+    this.buildRating = function( rating ) {
+        var stars = self.writeStars(rating.score);
+        var user = self.capitalise(rating.user);
+        var icon = "";
+        if ( 'editable' in rating )
+            icon = '<a title="edit" href="#" class="edit_icon"><i class="fa fa-edit"></i></a>';
+        var score = '<p class="userscore"><span class="username">'+user+'</span>'
+            +icon+stars+'</p>';
+        if ( 'review' in rating )
+            score += '<p class="review">'+rating.review+'</p>';
+        return '<div class="rating">'+score+'</div>';
+    };
+    /**
+     * Get the index of the rating being edited
+     * @return an int or -1 if none
+     */
+    this.getEditedIndex = function() {
+        var item = -1;
+        for ( var i=0;i<self.ratings.length;i++ )
+            if ( 'editable' in this.ratings[i] )
+            {
+                item = i;
+                break;
+            }
+        return item;
+    };
+    /**
+     * Calculate overall score
+     * @return the average score of all reviews
+     */
+    this.calcScore = function() {
+        var total = 0;
+        for ( var i=0;i<this.ratings.length;i++ )
+            total += this.ratings[i].score;
+        return (this.ratings.length!=0)?total/this.ratings.length:0;
+    };
+    /**
+     * Turn on the edit button 
+     */
+    this.activateEditIcon = function() {
+        jQuery(".edit_icon").click(function() {
+            var item = self.getEditedIndex();
+            var form = self.buildEditForm(self.ratings[item]);
+            jQuery(".rating:eq("+item+")").replaceWith(form);
+            jQuery("#cancel_button").click(function(){
+                jQuery("#edit_rating").replaceWith(self.buildRating(self.ratings[item]));
+                self.activateEditIcon();
+            });
+            jQuery("#save_button").click(function(){
+                var item = self.getEditedIndex();
+                // update local copy so we don't have to download again
+                self.ratings[item].score = parseInt(jQuery("#user_rating_select").val());
+                self.ratings[item].review = jQuery("#user_review_box").val();
+                console.log(jQuery("#user_rating_select").val());
+                var url = jQuery("#edit_rating").attr("action");
+                var data = new Object();
+                data.user = self.ratings[item].user;
+                data.review = self.ratings[item].review;
+                data.score = self.ratings[item].score;
+                data.docid = self.docid;
+                var posting = jQuery.post(url,data);
+                posting.done( function() {
+                    jQuery("#ratings .stars:eq(0)").replaceWith(self.writeStars(self.calcScore()));
+                    jQuery("#edit_rating").replaceWith(self.buildRating(self.ratings[item]));
+                    self.activateEditIcon();
+                });
+                posting.fail( function() {
+                    console.log("posting of review failed");
+                });
+            });
+        });
+    };
+    var url = 'http://'+window.location.hostname+'/ratings/?docid='+this.docid;
+    var jqxhr = jQuery.get(url,function(data) {
+        var i = 0;
+        self.ratings = data.ratings;
+        // add the overall score, which may be a fraction
+        var span = self.writeStars( data.score );
+        jQuery("#ratings").append(span);
+        jQuery("#ratings").append(
+            '<div><a title="Show/hide reviews" href="#" class="show_hide" id="plus"><i class="fa fa-plus"></i></a>'
+            +'<div class="slidingDiv">'
+            +'</div></div>');
+        // IF the user has editing rights
+        // add an editing icon
+        for ( var i=0;i<self.ratings.length;i++ )
+        {
+            if ( self.ratings[i].user == self.userdata.name )
+            {
+                self.ratings[i].editable = true;
+                break;
+            }
+        }
+        // add the actual ratings
+        for ( i=0;i<self.ratings.length;i++ )
+        {
+            var r = self.buildRating(self.ratings[i]);
+            jQuery("#ratings .slidingDiv").append(r);
+        }
+        /**
+         * Activate show/hide button
+         */
+        jQuery('.show_hide').click(function(){
+            if ( jQuery("#plus i").hasClass("fa-plus") )
+            {
+                jQuery("#plus i").removeClass("fa-plus");
+                jQuery("#plus i").addClass("fa-minus");
+                jQuery(".slidingDiv").slideDown();
+            }
+            else
+            {
+                jQuery("#plus i").removeClass("fa-minus");
+                jQuery("#plus i").addClass("fa-plus");
+                jQuery(".slidingDiv").slideUp();
+            }
+        });
+        if ( jQuery(".edit_icon").length > 0 )
+            self.activateEditIcon();
+    });
+    jqxhr.fail(function() {
+        console.log( 'docid '+self.docid
+            +' not found or ratings service not running');
+    });
+}
+/**
  * Main object
  * @param target the id of the element we are to insert ourselves in
  * @param docid the docid to retrieve the version from
  * @param version1 the version id to fetch
  * @param selections (optional) mvd-offsets of words to select
  * @param message briefly display on load or null
+ * @param userdata encrypted user data
  */
-function mvdsingle(target,docid,version1,selections,message) 
+function mvdsingle(target,docid,version1,selections,message,userdata) 
 {
     this.docid = docid;
     this.version1 = version1;
     this.selections = selections;
     this.target = target;
     this.message = message;
+    this.userdata = userdata;
     this.layers = {base:'original text',del1:'first deletion layer',rdg1:'first alternative layer'};
     var self = this;
     /**
@@ -151,6 +365,8 @@ function mvdsingle(target,docid,version1,selections,message)
             }
             jQuery("#body").append(response);
             self.getVersionMetadata();
+            if ( jQuery("#ratings").children().length == 0 )
+                self.ratings = new ratings(self.docid,self.userdata);
             jQuery("#"+self.target).css("visibility","visible");
         });
     };
@@ -181,7 +397,8 @@ function mvdsingle(target,docid,version1,selections,message)
         if ( this.version1 != undefined && this.version1.length>0 )
             url += "&version1="+this.version1;
         jQuery.get(url, function(responseText) {
-            jQuery("#list").append( responseText );
+            var l = jQuery("#list");
+            l.append( responseText );
             // install version dropdown handler
             jQuery("#versions").change(function(){
                 var val = jQuery("#versions").val();
@@ -193,9 +410,11 @@ function mvdsingle(target,docid,version1,selections,message)
         });
     };
     // install boilerplate text
-    jQuery("#"+this.target).replaceWith('<div id="list"></div><div id="body"></div>');
+    jQuery("#"+this.target).replaceWith('<div id="list">'
+        +'<div id="ratings"></div></div>'
+        +'<div id="body"></div>');
     // start the ball rolling...
-    this.installDropdown();    
+    this.installDropdown();
 }
 function get_one_param( params, name )
 {
@@ -265,6 +484,12 @@ function getMVDArgs( scrName )
         else
             params['mod-target'] = 'content';
     }
+    if ( !('udata' in params) )
+    {
+        var tabs_params = jQuery("#tabs_params").val();
+        if ( tabs_params != undefined && tabs_params.length>0 )
+            params['udata'] = get_one_param(tabs_params,'udata');
+    }
     return params;
 }
 /* main entry point - gets executed when the page is loaded */
@@ -272,5 +497,5 @@ jQuery(function(){
     var params = getMVDArgs('mvdsingle');
     var t = jQuery("#"+params['mod-target']).css("visibility","hidden");
     var viewer = new mvdsingle(params['mod-target'],params['docid'], 
-        params['version1'],params['selections'],null);
+        params['version1'],params['selections'],null,params['udata']);
 }); 

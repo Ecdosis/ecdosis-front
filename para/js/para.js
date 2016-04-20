@@ -101,6 +101,8 @@ function getParaArgs( scrName )
     }
     if ( !('format' in params) )
         params['format'] = 'text/x-markdown';
+    if ( !('mod-target' in params) && ('target' in params) )
+        params['mod-target'] = params['target'];
     return params;
 }
 /* main entry point - gets executed when the page is loaded */

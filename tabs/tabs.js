@@ -189,3 +189,4 @@ jQuery(function(){
     var tabs = new tabbed(params['target'],params['module'],params['tabset'],
         params['tabs'],params['modules'],params['menuopt']);
 }); 
+
