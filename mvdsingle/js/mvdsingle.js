@@ -19,7 +19,10 @@ function ratings(docid,userdata)
         }
         return sb;
     };
+    // save a copy of the old userdata for later verification
+    this.encrypted = userdata;
     this.userdata = JSON.parse(this.decode(userdata));
+    console.log("enrypted="+this.encrypted);
     /**
      * Generate a span of possibly fractional stars
      * @param score the number of stars to display up to 5
@@ -89,11 +92,15 @@ function ratings(docid,userdata)
     this.buildRating = function( rating ) {
         var stars = self.writeStars(rating.score);
         var user = self.capitalise(rating.user);
-        var icon = "";
+        var icon1 = "";
+        var icon2 = ""; 
         if ( 'editable' in rating )
-            icon = '<a title="edit" href="#" class="edit_icon"><i class="fa fa-edit"></i></a>';
+        {
+            icon1 = '<a title="edit" href="#" id="edit_icon"><i class="fa fa-edit"></i></a>';
+            icon2 = '<a title="delete" href="#" id="delete_icon"><i class="fa fa-trash"></i></a>';
+        }
         var score = '<p class="userscore"><span class="username">'+user+'</span>'
-            +icon+stars+'</p>';
+            +icon1+icon2+stars+'</p>';
         if ( 'review' in rating )
             score += '<p class="review">'+rating.review+'</p>';
         return '<div class="rating">'+score+'</div>';
@@ -123,41 +130,77 @@ function ratings(docid,userdata)
         return (this.ratings.length!=0)?total/this.ratings.length:0;
     };
     /**
-     * Turn on the edit button 
+     * Activate the cancel and save buttons
      */
-    this.activateEditIcon = function() {
-        jQuery(".edit_icon").click(function() {
+    this.activateEditButtons = function(item) {
+        jQuery("#cancel_button").click(function(){
+            jQuery("#edit_rating").replaceWith(self.buildRating(self.ratings[item]));
+            self.activateEditIcons();
+        });
+        jQuery("#save_button").click(function(){
             var item = self.getEditedIndex();
-            var form = self.buildEditForm(self.ratings[item]);
-            jQuery(".rating:eq("+item+")").replaceWith(form);
-            jQuery("#cancel_button").click(function(){
+            // update local copy so we don't have to download again
+            self.ratings[item].score = parseInt(jQuery("#user_rating_select").val());
+            self.ratings[item].review = jQuery("#user_review_box").val();
+            console.log(jQuery("#user_rating_select").val());
+            var url = jQuery("#edit_rating").attr("action");
+            var data = new Object();
+            data.user = self.ratings[item].user;
+            data.review = self.ratings[item].review;
+            data.score = self.ratings[item].score;
+            data.docid = self.docid;
+            var posting = jQuery.post(url,data);
+            posting.done( function() {
+                jQuery("#ratings .stars:eq(0)").replaceWith(self.writeStars(self.calcScore()));
                 jQuery("#edit_rating").replaceWith(self.buildRating(self.ratings[item]));
-                self.activateEditIcon();
+                self.activateEditIcons();
             });
-            jQuery("#save_button").click(function(){
-                var item = self.getEditedIndex();
-                // update local copy so we don't have to download again
-                self.ratings[item].score = parseInt(jQuery("#user_rating_select").val());
-                self.ratings[item].review = jQuery("#user_review_box").val();
-                console.log(jQuery("#user_rating_select").val());
-                var url = jQuery("#edit_rating").attr("action");
-                var data = new Object();
-                data.user = self.ratings[item].user;
-                data.review = self.ratings[item].review;
-                data.score = self.ratings[item].score;
-                data.docid = self.docid;
-                var posting = jQuery.post(url,data);
-                posting.done( function() {
-                    jQuery("#ratings .stars:eq(0)").replaceWith(self.writeStars(self.calcScore()));
-                    jQuery("#edit_rating").replaceWith(self.buildRating(self.ratings[item]));
-                    self.activateEditIcon();
-                });
-                posting.fail( function() {
-                    console.log("posting of review failed");
-                });
+            posting.fail( function() {
+                console.log("posting of review failed");
             });
         });
     };
+    /**
+     * Turn on the edit button 
+     */
+    this.activateEditIcons = function() {
+        jQuery("#edit_icon").click(function() {
+            var item = self.getEditedIndex();
+            var form = self.buildEditForm(self.ratings[item]);
+            jQuery(".rating:eq("+item+")").replaceWith(form);
+            self.activateEditButtons(item);
+        });
+        jQuery("#delete_icon").click(function() {
+            var answer = confirm("Are you sure you want to delete your review?");
+            if ( answer )
+            {
+                var item = jQuery(this).closest(".rating").index();
+                jQuery(".slidingDiv div:eq("+item+")").remove();
+                self.ratings.splice(item,1);
+                var jObj = new Object();
+                jObj.docid = self.docid;
+                jObj.userdata = self.encrypted;
+                var res = jQuery.post("/ratings/delete/", jObj );
+                res.fail(function(){
+                    alert("couldn't delete");
+                });
+            }
+        });
+    };
+    /**
+     * Is the currently logged-in user an editor
+     * @return true if the user is logged in and has a role "editor"
+     */
+    this.isEditor = function() {
+        if ( this.userdata.name.length > 0 && this.userdata.roles.length > 0 )
+        {
+            for ( var i=0;i<this.userdata.roles.length;i++ )
+                if ( this.userdata.roles[i] == "editor" )
+                    return true;
+        }
+        return false;
+    };
+    // start by fetching the ratings for this document
     var url = 'http://'+window.location.hostname+'/ratings/?docid='+this.docid;
     var jqxhr = jQuery.get(url,function(data) {
         var i = 0;
@@ -169,8 +212,8 @@ function ratings(docid,userdata)
             '<div><a title="Show/hide reviews" href="#" class="show_hide" id="plus"><i class="fa fa-plus"></i></a>'
             +'<div class="slidingDiv">'
             +'</div></div>');
-        // IF the user has editing rights
-        // add an editing icon
+        // IF the user already has a posted review
+        // add the editing icon next to his/her name
         for ( var i=0;i<self.ratings.length;i++ )
         {
             if ( self.ratings[i].user == self.userdata.name )
@@ -184,6 +227,33 @@ function ratings(docid,userdata)
         {
             var r = self.buildRating(self.ratings[i]);
             jQuery("#ratings .slidingDiv").append(r);
+        }
+        // add form for creating first review
+        if ( self.ratings.length== 0 )
+        {
+            jQuery("#ratings .slidingDiv").contents().remove();
+            if ( self.userdata.name.length== 0 )
+            {
+                jQuery("#ratings .slidingDiv").append(
+                    '<div class="rating"><p>Login to enter reviews</p></div>');
+            }
+            else if ( !self.isEditor() )
+            {
+                jQuery("#ratings").append(
+                    '<div class="rating"><p>You don\'t have permission to enter reviews</p></div>');
+            }
+            else
+            {
+                var rating = new Object();
+                rating.user = self.userdata.name;
+                rating.review = "";
+                rating.score = 0;
+                rating.editable = true;
+                self.ratings.push(rating);
+                jQuery("#ratings .slidingDiv").append(self.buildEditForm(rating));
+                self.calcScore();
+                self.activateEditButtons(0);
+            }
         }
         /**
          * Activate show/hide button
@@ -202,8 +272,8 @@ function ratings(docid,userdata)
                 jQuery(".slidingDiv").slideUp();
             }
         });
-        if ( jQuery(".edit_icon").length > 0 )
-            self.activateEditIcon();
+        if ( jQuery("#edit_icon").length > 0 )
+            self.activateEditIcons();
     });
     jqxhr.fail(function() {
         console.log( 'docid '+self.docid
