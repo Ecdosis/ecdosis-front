@@ -22,7 +22,6 @@ function ratings(docid,userdata)
     // save a copy of the old userdata for later verification
     this.encrypted = userdata;
     this.userdata = JSON.parse(this.decode(userdata));
-    console.log("enrypted="+this.encrypted);
     /**
      * Generate a span of possibly fractional stars
      * @param score the number of stars to display up to 5
@@ -174,19 +173,47 @@ function ratings(docid,userdata)
             var answer = confirm("Are you sure you want to delete your review?");
             if ( answer )
             {
+                // delete locally
                 var item = jQuery(this).closest(".rating").index();
                 jQuery(".slidingDiv div:eq("+item+")").remove();
                 self.ratings.splice(item,1);
+                // delete on server
                 var jObj = new Object();
                 jObj.docid = self.docid;
                 jObj.userdata = self.encrypted;
                 var res = jQuery.post("/ratings/delete/", jObj );
                 res.fail(function(){
-                    alert("couldn't delete");
+                    alert("Couldn't delete. Please refresh page");
                 });
             }
         });
     };
+    /**
+     * Add an empty review
+     */
+    this.addEmptyReview = function() {
+        if ( self.userdata.name.length == 0 )
+        {
+            jQuery("#ratings .slidingDiv").append(
+                '<div class="rating"><p>Login to enter reviews</p></div>');
+        }
+        else if ( !self.isEditor() )
+        {
+            jQuery("#ratings").append(
+                '<div class="rating"><p>You don\'t have permission to enter reviews</p></div>');
+        }
+        else
+        {
+            var rating = new Object();
+            rating.user = self.userdata.name;
+            rating.review = "";
+            rating.score = 0;
+            rating.editable = true;
+            self.ratings.push(rating);
+            jQuery("#ratings .slidingDiv").append(self.buildEditForm(rating));
+            self.activateEditButtons(self.getEditedIndex());
+        }
+    }
     /**
      * Is the currently logged-in user an editor
      * @return true if the user is logged in and has a role "editor"
@@ -214,11 +241,13 @@ function ratings(docid,userdata)
             +'</div></div>');
         // IF the user already has a posted review
         // add the editing icon next to his/her name
+        var hadReview = false;
         for ( var i=0;i<self.ratings.length;i++ )
         {
             if ( self.ratings[i].user == self.userdata.name )
             {
                 self.ratings[i].editable = true;
+                hadReview = true;
                 break;
             }
         }
@@ -228,31 +257,20 @@ function ratings(docid,userdata)
             var r = self.buildRating(self.ratings[i]);
             jQuery("#ratings .slidingDiv").append(r);
         }
-        // add form for creating first review
-        if ( self.ratings.length== 0 )
+        // add form for creating user's first review
+        if ( !hadReview )
         {
-            jQuery("#ratings .slidingDiv").contents().remove();
-            if ( self.userdata.name.length== 0 )
-            {
-                jQuery("#ratings .slidingDiv").append(
-                    '<div class="rating"><p>Login to enter reviews</p></div>');
-            }
-            else if ( !self.isEditor() )
-            {
-                jQuery("#ratings").append(
-                    '<div class="rating"><p>You don\'t have permission to enter reviews</p></div>');
-            }
+            if ( self.ratings.length==0 )
+                self.addEmptyReview();
             else
             {
-                var rating = new Object();
-                rating.user = self.userdata.name;
-                rating.review = "";
-                rating.score = 0;
-                rating.editable = true;
-                self.ratings.push(rating);
-                jQuery("#ratings .slidingDiv").append(self.buildEditForm(rating));
-                self.calcScore();
-                self.activateEditButtons(0);
+               var plus = '<div id="plus_div" class="rating"><span id="plus_empty_review">'
+                   +'<i class="fa fa-plus"></i></span></div>';
+               jQuery("#ratings .slidingDiv").append(plus);
+               jQuery("#plus_empty_review").click(function() {
+                   jQuery("#plus_div").remove();
+                   self.addEmptyReview();
+               });
             }
         }
         /**
