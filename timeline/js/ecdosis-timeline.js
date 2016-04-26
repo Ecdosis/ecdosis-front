@@ -6,7 +6,7 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
     this.language = language;
     this.modpath=modpath;
     self = this;
-    this.options = ['biography','composition','letter','other','all'];
+    this.options = ['biography','composition','letter','location','other','all'];
     /**
      * Add the years to the year dropdown, based on the events
      * @param jsObject the plain js object form of the events list
