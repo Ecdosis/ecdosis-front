@@ -3,16 +3,47 @@
  * @param target the id of the target element on the page
  * @param title the table title
  * @param projid the id of the project
+ * @param userdata the encrypted userdata
  */
-function works(target,title,projid)
+function works(target,title,projid,userdata)
 {
     this.target = target;
-    this.tableTitle = title;
-    this.sortStates = ["ascending","unsorted","unsorted"];
-    this.cellTitles = ["Id","Title","First Year"];
+    this.key = "I tell a settlers tale of the old times";
     this.cellIds = ["hnumber","normtitle","firstyear"];
+    this.sortFields = ["id","normalised-title","leastYear"];
+    this.cellTitles = ["Id","Title","First Year"];
+    this.sortStates = ["unsorted","ascending","unsorted"];
+    this.tableTitle = title;
     this.projid = unescape(projid);
     var self = this;
+    this.decode = function( enc ) {
+        var plain = atob(enc);
+        var sb = "";
+        for ( var i=0;i<plain.length;i++ )
+        {
+            var kchar = this.key.charCodeAt(i%this.key.length);
+            var pchr = plain.charCodeAt(i)^kchar;
+            sb += String.fromCharCode(pchr);
+        }
+        return sb;
+    };
+    // save a copy of the old userdata for later verification
+    this.encrypted = userdata;
+    this.userdata = JSON.parse(this.decode(userdata));
+    /**
+     * Is the currently logged-in user an editor
+     * @return true if the user is logged in and has a role "editor"
+     */
+    this.isEditor = function() {
+        if ( this.userdata.name.length > 0 && this.userdata.roles.length > 0 )
+        {
+            for ( var i=0;i<this.userdata.roles.length;i++ )
+                if ( this.userdata.roles[i] == "editor" )
+                    return true;
+        }
+        return false;
+    };
+    this.actingEditor = this.isEditor();
     /**
      * Copy the generated HTML into the page
      * @param html the html of the table
@@ -183,12 +214,14 @@ function works(target,title,projid)
     };
     /**
      * Decide whether to separate two entries in a version description
-     * @param entry teh current entry to be appended to
+     * @param entry the current entry to be appended to
      * @param new_text the new text to add
      * @return the old and new text duly separated
      */
     this.sep = function( entry, new_text ) {
-        if ( entry.charAt(entry.length-1)==' ' )
+        var previous = entry.charAt(entry.length-1);
+        var initial = entry.length>=4&&entry.substr(entry.length-4)=="<li>";
+        if ( previous==' '||initial )
             return entry+new_text;
         else
             return entry+"; "+new_text;
@@ -224,11 +257,21 @@ function works(target,title,projid)
         {
             var v = versions[i];
             var entry = '<li>';
-            entry += '<a href="'+self.makeUrl(hid,v['version-id'])+'">'+v['version-id']+'</a>: ';
+            if ( self.activeEditor )
+                entry += '<a href="'+self.makeUrl(hid,v['version-id'])+'">'+v['version-id']+'</a>';
             if ( v['version-title'] != undefined )
                 entry += '<span class="version_title">'+v['version-title']+"</span>";
-            if ( v['first-line'] != undefined )
-                entry = self.sep(entry, '<span class="version_firstline">'+v['first-line']+"</span>");
+            if ( self.activeEditor )
+            {
+                if ( v['first-line'] != undefined )
+                    entry = self.sep(entry, '<span class="version_firstline">'+v['first-line']+"</span>");
+            }
+            else
+            {
+                if ( v['first-line'] != undefined )
+                    entry = self.sep(entry, '<a href="'+self.makeUrl(hid,v['version-id'])
+                        +'"><span class="version_firstline">'+v['first-line']+"</span></a>");
+            }
             if ( v['year'] != undefined )
                 entry = self.sep(entry, '<span class="version_year">'+v['year']+"</span>");
             if ( v['date'] != undefined )
@@ -327,6 +370,9 @@ function works(target,title,projid)
         else
             console.log("couldn't find target row");
     };
+    /**
+     * Rebuild the table after a change to its order
+     */
     this.rebuild = function() {
         var html = '<div id="works">';
         html += '</div>';
@@ -354,12 +400,12 @@ function works(target,title,projid)
             row += '<i class="fa fa-plus"></i></td>';
             if ( this.jsonTable[i].alias )
             {
-                row += '<td class="alias">'+this.jsonTable[i].defaultVersion+'</td>';
+                row += '<td class="alias hid">'+this.jsonTable[i].defaultVersion+'</td>';
                 row += '<td class="alias">'+this.jsonTable[i].title+'</td>';
             }
             else 
             {
-                row += '<td>'+this.jsonTable[i].id+'</td>';
+                row += '<td class="hid">'+this.jsonTable[i].id+'</td>';
                 row += '<td>'+this.jsonTable[i].title+'</td>';
             }
             row += '<td class="leastyear">'+this.jsonTable[i].leastYear+'</td>';
@@ -368,9 +414,12 @@ function works(target,title,projid)
         /**
          * Handlers for the header
          */
-        jQuery("#hnumber").click(function() {
-            self.toggleState(0,"id");
-        });
+        if ( this.actingEditor )
+        {
+            jQuery("#hnumber").click(function() {
+                self.toggleState(0,"id");
+            });
+        }
         jQuery("#normtitle").click(function() {
             self.toggleState(1,"normalised-title");
         });
@@ -386,14 +435,27 @@ function works(target,title,projid)
                  cell = cell.parentNode;
             self.toggleRow( jQuery(cell).next().text() );
         });
+        jQuery("#"+self.target).css("visibility","visible");
+        if ( !self.actingEitor )
+        {
+            jQuery(".hid").css("display","none");
+            jQuery("#hnumber").css("display","none");
+        }
     };
     var url = "http://"+window.location.hostname+"/project/works";
     url += "?projid="+this.projid;
     jQuery("body").append('<div id="progress">Please wait while the table loads...</div>');
     jQuery.get(url,function(data) {
         self.jsonTable = data;
+        for ( var i=0;i<self.sortStates.length;i++ )
+        {
+            if ( self.sortStates[i] != 'unsorted' )
+            {
+                self.sortByField(self.sortFields[i],self.sortStates[i]);
+                break;
+            }
+        }
         self.rebuild();
-        jQuery("#"+self.target).css("visibility","visible");
         jQuery("#progress").remove();
     });
 }
@@ -458,6 +520,12 @@ function getWorksArgs( scrName )
         if ( tabs_params != undefined && tabs_params.length>0 )
             params['projid'] = get_one_param(tabs_params,'docid');
     }
+    if ( !('udata' in params) )
+    {
+        var tabs_params = jQuery("#tabs_params").val();
+        if ( tabs_params != undefined && tabs_params.length>0 )
+            params['udata'] = get_one_param(tabs_params,'udata');
+    }
     return params;
 }
 /* main entry point - gets executed when the page is loaded */
@@ -465,5 +533,5 @@ jQuery(function(){
     var params = getWorksArgs('works');
     var projid = (params['projid']==undefined)?"english/harpur":params['projid'];
     jQuery("#"+params['mod-target']).css("visibility","hidden");
-    var w = new works(params['mod-target'],params['title'],projid);
+    var w = new works(params['mod-target'],params['title'],projid,params['udata']);
 }); 

@@ -62,7 +62,7 @@ function browse( target, listid )
         .children('ul').hide();
     };
     var url = "http://"+window.location.hostname
-        +"/misc/?docid="+this.listid;
+        +"/misc/html?docid="+this.listid;
     jQuery.get(url,function(data) {
         var t = jQuery("#"+self.target);
         t.contents().remove();
@@ -96,7 +96,8 @@ function getBrowseArgs()
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
     var params = getBrowseArgs();
-    var viewer = new browse(params['mod-target'],params['listid']);
+    if ( params['listid'] != undefined )
+        var viewer = new browse(params['mod-target'],params['listid']);
 });
 
 
