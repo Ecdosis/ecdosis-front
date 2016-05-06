@@ -17,7 +17,8 @@ function works(target,title,projid,userdata)
     this.projid = unescape(projid);
     var self = this;
     this.decode = function( enc ) {
-        var plain = atob(enc);
+        var decoded = decodeURIComponent(enc);
+        var plain = atob(decoded);
         var sb = "";
         for ( var i=0;i<plain.length;i++ )
         {
@@ -436,7 +437,7 @@ function works(target,title,projid,userdata)
             self.toggleRow( jQuery(cell).next().text() );
         });
         jQuery("#"+self.target).css("visibility","visible");
-        if ( !self.actingEitor )
+        if ( !self.actingEditor )
         {
             jQuery(".hid").css("display","none");
             jQuery("#hnumber").css("display","none");
