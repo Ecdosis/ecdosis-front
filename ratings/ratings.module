@@ -1,0 +1,40 @@
+<?php
+function build_ratings_args()
+{
+    $args = "";
+    if ( array_key_exists ("docid", $_GET) )
+        $args .= '&docid='.$_GET["docid"];
+    if ( array_key_exists ("target", $_GET) )
+        $args .= '&target='.$_GET["target"];
+    if ( strpos($args,'&')==0 )
+        $args = substr($args,1);
+    return $args;
+}
+function ratings_block_info() {
+  $blocks['ratings'] = array(
+    'info' => t('Display a list of rated works in descending order of popularity'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function ratings_help($path, $arg) {
+    switch ($path)
+    {
+        case "admin/help#ratings":
+            return '<p>' .
+                t("Display a list of rated works in descending order of popularity")
+                . '</p>';
+            break;
+    }
+}
+function ratings_block_view($delta = '') {
+  switch ($delta) {
+    case 'ratings':
+      $args = build_ratings_args();
+      $mod_path = drupal_get_path('module', 'ratings');
+      $block['content'] = '<script type="text/javascript" src="'.$mod_path
+          .'/js/ratings.js?'.$args.'"></script>';
+      return $block;
+  }
+}
+

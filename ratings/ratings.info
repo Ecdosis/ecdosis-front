@@ -1,0 +1,6 @@
+name = ratings
+description = Display a list of rated works by descending order of popularity
+core = 7.x
+configure = admin/config/content/ratings
+stylesheets[all][] = ./css/rating.css
+
