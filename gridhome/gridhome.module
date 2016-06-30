@@ -27,7 +27,7 @@ function gridhome_block_view($delta = '') {
       $mod_path = drupal_get_path('module', 'gridhome');
       $block['content'] = '<script type="text/javascript" src="'
           .$mod_path.'/gridhome.js?target=content&modpath='.$mod_path.
-          '&docid=english/harpur/home"></script>';
+          '&docid=english/harpur/about/home"></script>';
       return $block;
   }
 }

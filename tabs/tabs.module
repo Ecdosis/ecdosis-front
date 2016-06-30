@@ -261,7 +261,9 @@ function get_mod_params( $module )
 function get_module(&$args)
 {
     if ( array_key_exists('module',$args) )
+    {
         return $args['module'];
+    }
     else if ( array_key_exists('modules',$args) )
     {
         $modules = $args['modules'];
@@ -280,7 +282,7 @@ function tabs_preprocess_page(&$vars)
         drupal_add_css(drupal_get_path('module','tabs').'/tabs.css','file');
         $tabs_params = array();
         $mod_params = array();
-        $tab_includes = array("module","modpath","modules","tabs","target","docid","tabset","menuopt");
+        $tab_includes = array("module","modpath","modules","tabs","target","docid","tabset","menuopt","event_type");
         $empty = array();
         add_uri_params($tabs_params,request_uri(),$tab_includes,$empty);
         add_uri_params($mod_params,request_uri(),$empty,$tab_includes);

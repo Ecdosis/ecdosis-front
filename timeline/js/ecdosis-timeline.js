@@ -1,9 +1,10 @@
 function timeline(target,docid,modpath,title,subtitle,event_type,language) {
     this.target = target;
     this.docid = docid;
-    this.title = title;
-    this.subtitle = subtitle;
+    this.title = unescape(title).replace(/\+/g,' ');
+    this.subtitle = unescape(subtitle).replace(/\+/g,' ');
     this.language = language;
+    this.event_type = event_type;
     this.modpath=modpath;
     self = this;
     this.options = ['biography','composition','letter','location','other','all'];
@@ -127,11 +128,12 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
                 var pWidth = jQuery("#"+target).width();
                 var config = { width: pWidth, height: 500, 
                     language: self.language };
-                self.addToolbar(target);
+                jQuery("#"+self.target).empty();
+                jQuery("#"+self.target).append('<div id="timeline-embed"></div>');
+                self.addToolbar('timeline-embed');
                 self.buildYearDropdown(dataObj);
-                jQuery("#"+self.target).children().remove();
                 config.source = dataObj;
-                config.embed_id = self.target;
+                config.embed_id = 'timeline-embed';
                 createStoryJS(config);
                 jQuery("#year_dropdown").change( function(e) {
                     var dates = timeline.config.events;
@@ -161,7 +163,7 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
             eventType.change(function(event) {
                 if ( eventType.val() != self.event_type )
                 {
-                    var href = self.replaceGetParam(location.href,"event_type",eventType.val());
+                    var href = location.href+"&event_type="+jQuery("#event_type").val();
                     location.assign(href);
                 }
             });
@@ -177,39 +179,83 @@ function timeline(target,docid,modpath,title,subtitle,event_type,language) {
         self.strs = load_strings();
         console.log(self.strs);
         console.log("loaded "+script_name+" successfully");
-        self.changeType(event_type);
+        self.changeType(self.event_type);
     });
 }
 /**
- * This reads the "arguments" to the javascript file
- * @param scrName the name of the script file minus ".js"
+ * Read the input params
  */
-function getArgs( scrName )
+function getTimelineArgs( scrName )
 {
-    var scripts = jQuery("script");
-    var params = new Object ();
-    scripts.each( function(i) {
-        var src = jQuery(this).attr("src");
-        if ( src != undefined && src.indexOf(scrName) != -1 )
+    var params = new Object();
+    var module_params = jQuery("#timeline_params").val();
+    var tabs_params = jQuery("#tabs_params").val();
+    if ( tabs_params != undefined && tabs_params.length>0 )
+    {
+        var parts = tabs_params.split("&");
+        for ( var i=0;i<parts.length;i++ )
         {
-            var qStr = src.replace(/^[^\?]+\??/,'');
-            if ( qStr )
+            var halves = parts[i].split("=");
+            if ( halves.length==2 )
             {
-                var pairs = qStr.split(/[;&]/);
-                for ( var i = 0; i < pairs.length; i++ )
+                if ( halves[0]=='modpath' )
                 {
-                    var keyVal = pairs[i].split('=');
-                    if ( ! keyVal || keyVal.length != 2 )
-                        continue;
-                    var key = unescape( keyVal[0] );
-                    var val = unescape( keyVal[1] );
-                    val = val.replace(/\+/g, ' ');
-                    params[key] = val;
+                    var path = unescape(halves[1]);
+                    var index = path.lastIndexOf("/");
+                    if ( index != -1 )
+                    {
+                        path = path.substring(0,index);
+                        path += "/timeline";
+                        params['modpath'] = path;
+                    }
+                }
+                else
+                    params[halves[0]] = unescape(halves[1]);
+            }
+        }
+    }
+    if ( module_params != undefined && module_params.length>0 )
+    {
+        var parts = module_params.split("&");
+        for ( var i=0;i<parts.length;i++ )
+        {
+            var halves = parts[i].split("=");
+            if ( halves.length==2 )
+            {
+                if ( halves[0] != 'event_type' || !('event_type' in params) )
+                    params[halves[0]] = halves[1];
+            }
+        }
+    }
+    else
+    {
+        var scripts = jQuery("script");
+        scripts.each( function(i) {
+            var src = jQuery(this).attr("src");
+            if ( src != undefined && src.indexOf(scrName) != -1 )
+            {
+                var qStr = src.replace(/^[^\?]+\??/,'');
+                if ( qStr )
+                {
+                    var pairs = qStr.split(/[;&]/);
+                    for ( var i = 0; i < pairs.length; i++ )
+                    {
+                        var index = pairs[i].indexOf("=");
+                        if ( index != -1 )
+                        {
+                            var keyVal = pairs[i].substring(0,index);
+                            var key = unescape( keyVal );
+                            var value = pairs[i].substring(index+1);
+                            var val = unescape( value );
+                            val = val.replace(/\+/g, ' ');
+                            params[key] = val;
+                        }
+                    }
                 }
             }
             return params;
-        }
-    });
+        });
+    }
     return params;
 }
 function safe_param( params, key, def )
@@ -223,11 +269,11 @@ function safe_param( params, key, def )
 /* main entry point - gets executed when the page is loaded */
 jQuery(function(){
     // DOM Ready - do your stuff
-    var params = getArgs('ecdosis-timeline.js');
+    var params = getTimelineArgs("timeline");
     var event_type = safe_param(params,'event_type','all');
     var subtitle = safe_param(params,'subtitle','Biographical events');
     var title = safe_param(params,'title','Project timeline');
     var language = safe_param(params,"language","en");
-    var instance = new timeline(params['target'],params['docid'],
+    var instance = new timeline(params['mod-target'],params['docid'],
         params['modpath'],title,subtitle,event_type,language);
 });
