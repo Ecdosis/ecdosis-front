@@ -462,7 +462,7 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
     };
     /**
      * Convert the mvd-positions to version-specific positions
-     * @param version the version to get voffsets for
+     * @param first the version to get voffsets for
      */
     this.getVOffsets = function( first ) {
         if ( self.selections != undefined && self.selections.length > 0 )
@@ -477,6 +477,31 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
         }
         else
             self.getTextBody( first );
+    };
+    this.getVersion1 = function( responseText ) {
+        var url = "http://"+window.location.hostname
+            +"/formatter/version1?docid="+this.docid;
+        jQuery.get( url, function(data) {
+            var first;
+            if ( data.length > 0 )
+                first = data;
+            else
+                first = self.getSelectedOption(responseText);
+            self.version1 = first;
+            if ( first.length>0&&first[0]!= '/' )
+                first = '/'+first;
+            jQuery("#versions").val(first).prop('selected',true);
+            self.getVOffsets(first);
+            self.updateSource();
+        })
+        .fail(function() {
+            self.version1 = first = self.getSelectedOption(responseText);
+            if ( first.length>0&&first[0]!= '/' )
+                first = '/'+first;
+            jQuery("#versions").val(first).prop('selected',true);
+            self.getVOffsets(first);
+            self.updateSource();
+        });
     };
     /**
      * Install the dropdown version list
@@ -494,9 +519,7 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
                 var val = jQuery("#versions").val();
                 self.getVOffsets( val );
             });
-            var first = self.getSelectedOption(responseText);
-            self.getVOffsets(first);
-            self.updateSource();
+            self.getVersion1(responseText);
         });
     };
     // install boilerplate text
