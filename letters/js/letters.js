@@ -22,9 +22,9 @@ function letterviewer(target,docid)
     this.getLetterDescription = function(docid) {
         var url = "http://"+window.location.hostname+"/pages/letter?docid="+docid;
         jQuery.get(url,function(data) {
-            var html = '<h3 class="description">';
+            var html = '<h3 class="description"><span>';
             html += data;
-            html += "</h3>";
+            html += "</span></h3>";
             jQuery("#"+self.target).empty();
             jQuery("#"+self.target).append(html);
             self.getMetadata(docid);

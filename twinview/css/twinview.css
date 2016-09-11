@@ -1,0 +1,20 @@
+body {padding:0;margin:0}
+img {width:100%}
+body {overflow:hidden}
+#wrapper {width:100%;overflow:hidden;position:relative}
+#sides {height:100%;position:relative}
+#lhs {float:left;position:relative}
+#rhs {float:right;height:100%;}
+#sides {float:left;position:relative}
+#scrollframe {overflow-y:auto;overflow-x:hidden;position:relative}
+.text-active,.text-inactive {margin:0;padding-left:1em;padding-right:0.3em;width:100%;border:0;position:relative}
+.text-active {display:block}
+.text-inactive {display:none}
+#tabs {height:2em}
+#tabs table {margin: 0;}
+.empty-tab {max-width:50%;border-right:1px solid black;border-bottom:1px solid black;opacity:0}
+.active-tab {background-color:white;max-width:50%;border-top:1px solid black;border-right:1px solid black}
+.inactive-tab, #plus-tab {max-width:50%;border-top:1px solid black;border-right:1px solid black;border-bottom:1px solid black;}
+#plus-tab {width:1em;text-align:center}
+#plus-tab:hover {cursor:pointer;background-color:lightblue}
+.inactive-tab:hover {cursor:pointer;background-color:lightblue}
