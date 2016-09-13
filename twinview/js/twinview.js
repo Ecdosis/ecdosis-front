@@ -65,6 +65,8 @@ function twinview( docid, version1, target )
             for ( var i=1;i<this.rCentres.length-1;i++ )
             {
                 if ( this.rCentres[i] > this.rCentres[i-1]
+                    && this.lCentres[i] > this.lCentres[i-1]
+                    && this.lCentres[i] < lLast
                     && this.rCentres[i] < rLast )
                 {
                     rCopy.push(this.rCentres[i]);
@@ -166,7 +168,40 @@ function twinview( docid, version1, target )
         jQuery("#scrollframe").css("height",sfh+"px");
         //this.getlayer().css("height",this.getlayer().height()+"px");
     };
-
+    /**
+     * Correlate the returned list of pages with those required by the text
+     * @param list the list of pages returned by /pages/list
+     * @return an array of page-objects corresponding to those in the text
+     */
+    this.filterPages = function( list ) {
+        this.rTops = Array();
+        this.findPage(this.getlayer());
+        this.sort(this.rTops);
+        var found = Array(); 
+        for ( var i=0;i<this.rTops.length;i++ )
+        {
+            var j;
+            for ( j=0;j<list.length;j++ )
+            {
+                if ( this.rTops[i].name == list[j].n )
+                    break;
+            }
+            if ( j == list.length )
+            {
+                var page = {};
+                page.n = this.rTops[i].name;
+                page.src = "/corpix/blank.jpg";
+                page.width = 2921;
+                page.height = 3796;
+                found.push(page);
+            }
+            else
+            {
+                found.push(list[j]);
+            }
+        }       
+        return found;
+    };
     /**
      * Fetch the images corresponding to the page numbers in the text
      * @param docid the document identifier with the pages in it
@@ -178,9 +213,10 @@ function twinview( docid, version1, target )
             var html = "";
             self.setWidths();
             var maxW = jQuery("#lhs").width();
-            for ( var i=0;i<data.length;i++ )
+            var pages = self.filterPages(data);
+            for ( var i=0;i<pages.length;i++ )
             {
-                var p = data[i];
+                var p = pages[i];
                 var ratio = maxW/p.width;
                 var w = Math.round(p.width*ratio);
                 var h = Math.round(p.height*ratio);
@@ -206,7 +242,10 @@ function twinview( docid, version1, target )
             var old = elem.css("display");
             elem.css("display","inline");
             // console.log(elem.position().top);
-            this.rTops.push(elem.position().top);
+            var page = {};
+            page.top = elem.position().top;
+            page.name = elem.text().trim();
+            this.rTops.push(page);
             elem.css("display",old);
         }
         else
@@ -232,7 +271,7 @@ function twinview( docid, version1, target )
         for (var h = a.length; h = Math.floor(h/2);) {
             for (var i = h; i < a.length; i++) {
                 var k = a[i];
-                for (var j=i;j>=h && k<a[j-h]; j-=h)
+                for (var j=i;j>=h && k.top<a[j-h].top; j-=h)
                     a[j] = a[j-h];
                 a[j] = k;
             }
@@ -245,20 +284,22 @@ function twinview( docid, version1, target )
     {
         this.rCentres = Array();
         this.rTops = Array();
-        // fills in rTops
         this.findPage(this.getlayer());
         // add extra page-break at end
-        this.rTops.push(this.getlayer()[0].scrollHeight);
-        this.printArray("rTops",this.rTops);
+        var last = {};
+        last.name = "final";
+        last.top = this.getlayer()[0].scrollHeight;
+        console.log("scrollHeight="+last.top);
+        this.rTops.push(last);
         this.sort(this.rTops);
         for ( var i=1;i<this.rTops.length;i++ )
         {
-            var diff = this.rTops[i]-this.rTops[i-1];
-            this.rCentres.push( Math.round(this.rTops[i-1]+diff/2) );
+            var diff = this.rTops[i].top-this.rTops[i-1].top;
+            this.rCentres.push( Math.round(this.rTops[i-1].top+diff/2) );
         }
-        this.textEnd = this.rTops[this.rTops.length-1];
-        //this.printArray("raw lCentres", this.lCentres);
-        //this.printArray("raw rCentres",this.rCentres);
+        this.textEnd = Math.round(this.rTops[this.rTops.length-1].top);
+        this.printArray("raw lCentres", this.lCentres);
+        this.printArray("raw rCentres",this.rCentres);
         // fudge first and last pages which aren't centred
         var wHalfHt = Math.round(jQuery("#scrollframe").height()/2);
         this.rCentres.unshift( wHalfHt );
