@@ -132,7 +132,6 @@ function twinview( docid, version1, target )
     this.layerSlop = function() {
         var slop = this.getCssParam(this.current,'padding-left');
         slop += this.getCssParam(this.current,'padding-right');
-        console.log("layer slop for "+this.current+"="+slop);
         return slop;
     };
     /**
@@ -220,8 +219,10 @@ function twinview( docid, version1, target )
                 var ratio = maxW/p.width;
                 var w = Math.round(p.width*ratio);
                 var h = Math.round(p.height*ratio);
-                html += '<img src="'+p.src+'" width="'+w
-                    +'" height="'+h+'" title="'+p.n+'" data-n="'+p.n+'">\n';
+                html += '<a class="swinxyzoom swinxyzoom-window" '
+                    +'href="'+p.src+'"><img src="'
+                    +p.src+'" width="'+w+'" height="'+h+'" title="'
+                    +p.n+'" data-n="'+p.n+'"></a>\n';
             }
             jQuery("#lhs").append(html);
             self.fitText();
@@ -230,6 +231,27 @@ function twinview( docid, version1, target )
             self.fitText();
             jQuery("#"+self.target).css("visibility","visible");
             self.recalcPageCentres();
+            jQuery('a.swinxyzoom-window').swinxyzoom({mode:'window',size:'src'});
+            jQuery('.sxy-zoom-slider a').click(function(e)
+	    {
+		e.preventDefault();
+		  var
+		  $this = jQuery(this),
+		  picId = parseInt($this.attr('href')),
+		  path  = '../../../_assets/images/zoom/' + $this.attr('href');
+		  jQuery('.swinxyzoom').swinxyzoom('load', path + '-small.jpg',  path + '-large.jpg');
+		  jQuery('.sxy-zoom-slider a.active').removeClass('active');
+		  jQuerythis.toggleClass('active');
+		  jQuery('.sxy-zoom-slider .viewer').animate({ left: ($this.offset().left - jQuery('.sxy-zoom-slider').offset().left) });
+	    });
+            /* check if images are higher than screen and text is NOT */
+            var sidesHt = jQuery("#sides").height();
+            if ( self.textEnd < sidesHt && self.imageEnd > sidesHt )
+            {
+                var children = jQuery("#lhs").children().detach();
+                jQuery("#lhs").append('<div id="scrollframe-lhs"></div>');
+                jQuery("#scrollframe-lhs").append(children);
+            }
         });
     };
     /**
@@ -546,9 +568,10 @@ function getTwinviewArgs( scrName )
     return params;
 }
 /* main entry point - gets executed when the page is loaded */
-jQuery(function(){
+jQuery(document).ready(function($){
     var params = getTwinviewArgs('twinview');
     jQuery("#"+params['mod-target']).css("visibility","hidden");
     var tv = new twinview(params['docid'],params['version1'],params['mod-target']);
 }); 
+
 

@@ -1,12 +1,12 @@
 body {padding:0;margin:0}
-img {width:100%}
 body {overflow:hidden}
 #wrapper {width:100%;overflow:hidden;position:relative}
 #sides {height:100%;position:relative}
-#lhs {float:left;position:relative}
+#lhs {float:left;position:relative;}
 #rhs {float:right;height:100%;}
 #sides {float:left;position:relative}
 #scrollframe {overflow-y:auto;overflow-x:hidden;position:relative}
+#scrollframe-lhs {overflow-y:auto;position:relative;height:100%}
 .text-active,.text-inactive {margin:0;padding-left:1em;padding-right:0.3em;width:100%;border:0;position:relative}
 .text-active {display:block}
 .text-inactive {display:none}

@@ -4,6 +4,8 @@ function twinview_preprocess_page(&$vars)
     if ( strpos(request_uri(),"twinview") )
     {
         drupal_add_css(drupal_get_path('module','twinview').'/css/twinview.css','file');
+        drupal_add_css(drupal_get_path('module','twinview').'/css/swinxy.css','file');
+        drupal_add_js(drupal_get_path('module','twinview').'/js/swinxy.js','file');
     }
 }
 function build_twinview_args()
