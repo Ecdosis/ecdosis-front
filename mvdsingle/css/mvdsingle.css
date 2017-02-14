@@ -1,3 +1,5 @@
+span.description{margin-right:1em}
+#source {margin-left:1em}
 #main-mvdsingle {width:600px;margin-left:auto;margin-right:auto;margin-bottom:10px}
 #list {margin-bottom:8px}
 #temp-message {color: #2883DE}
@@ -11,6 +13,7 @@
     text-decoration: none
 }
 #body {width:70%}
+#body .title {display:block}
 #plus i {color:grey}
 .username {font-weight: bold }
 .userscore {text-align:left;margin-bottom:0.25em;margin-top:0.5em}

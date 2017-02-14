@@ -1,0 +1,52 @@
+<?php
+function twinview_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"twinview") )
+    {
+        drupal_add_css(drupal_get_path('module','twinview').'/css/twinview.css','file');
+        drupal_add_css(drupal_get_path('module','twinview').'/css/swinxy.css','file');
+        drupal_add_js(drupal_get_path('module','twinview').'/js/swinxy.js','file');
+    }
+}
+function build_twinview_args()
+{
+    $args = "";
+    if ( array_key_exists ("docid", $_GET) )
+        $args .= '&docid='.$_GET["docid"];
+    if ( array_key_exists ("target", $_GET) )
+        $args .= '&target='.$_GET["target"];
+    else
+        $args .= '&target=content';
+    if ( strpos($args,'&')==0 )
+        $args = substr($args,1);
+    return $args;
+}
+function twinview_block_info() {
+    $blocks['twinview'] = array(
+      'info' => t('View MSS and text side by side'),
+      'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    return $blocks;
+}
+function twinview_help($path, $arg) {
+    switch ($path)
+    {
+        case "admin/help#twinview":
+            return '<p>' .
+                t("View facsimilies and text side by side")
+                . '</p>';
+            break;
+    }
+}
+function twinview_block_view($delta = '') {
+  switch ($delta) {
+    case 'tree':
+      $args = build_twinview_args();
+      $mod_path = drupal_get_path('module', 'twinview');
+      $block['content'] = '<script type="text/javascript" src="'.$mod_path
+          .'/js/twinview.js?'.$args.'"></script>';
+      return $block;
+  }
+}
+
+

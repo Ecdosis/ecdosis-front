@@ -1,0 +1,4 @@
+name = twinview
+description = View HTML rendition next to MS/newspaper/letter images
+core = 7.x
+configure = admin/config/content/twinview

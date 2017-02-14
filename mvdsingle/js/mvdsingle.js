@@ -436,6 +436,32 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
             }
         });
     };
+    this.setHnoteWidth= function() {
+        var maxHnoteWidth = 0;
+        jQuery("div.hnote, p.p").each(function(){
+            var text = jQuery(this).text();
+            var lines = text.split("\n");
+            for ( var i=0;i<lines.length;i++ )
+            {
+                jQuery(this).append('<span id="testit" style="visibility:hidden">'+lines[i]+'</span>');
+                var w = jQuery("#testit").width();
+                if ( w > maxHnoteWidth )
+                    maxHnoteWidth = w;
+                jQuery("#testit").remove();
+            }
+        });
+        jQuery("div.hnote, p.p").width(Math.round(maxHnoteWidth+10));
+    };
+    this.setStanzaWidth = function() {
+        var maxWidth = 0;
+        jQuery("span[class^='line']").each(function(){
+            var w = jQuery(this).width();
+            if ( w > maxWidth )
+                maxWidth = w;
+        });
+        var stanzaWidth = Math.round(maxWidth + 10);
+        jQuery("div.stanza").width(stanzaWidth);
+    };
     /**
      * Get the text body of the current version. Highlight any hits
      * @param version the version to display
@@ -454,6 +480,8 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
                 window.setTimeout('jQuery("#temp-message").remove()', 10000);
             }
             jQuery("#body").append(response);
+            self.setStanzaWidth();
+            self.setHnoteWidth();
             self.getVersionMetadata();
             if ( jQuery("#ratings").children().length == 0 )
                 self.ratings = new ratings(self.docid,self.userdata);
@@ -504,16 +532,69 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
         });
     };
     /**
+     * Strip the leading slash IF present
+     */
+    this.stripSlash= function(str) {
+        if ( str.length>0 && str[0]=='/' )
+            return str.substring(1);
+        else
+            return str;
+    };
+    /**
+     * Format theJSON short version list into HTML. Can be oldstyle.
+     * @param jObj the JSON short version table or oldstyle long.
+     */
+    this.formatVersionList= function(jObj) {
+        var groups = {};
+        var versions = jObj.versions;
+        var html = '<span class="description">';
+        html += jObj.description;
+        html += '</span>';
+        html +='<select id="versions" class="list" name="versions">';
+        for ( var i=0;i<versions.length;i++ )
+        {
+            var list = groups[versions[i].groupPath];
+            if ( list == undefined )
+            {
+                list = Array();
+                groups[versions[i].groupPath] = list;
+            } 
+            list.push(versions[i]);
+        }
+        for (var g in groups ) 
+        {
+            if ( g != "/" && g.length!=0 )
+                html += '<optgroup class="group" label="'+this.stripSlash(g)+'">';
+            list = groups[g];
+            for ( var i=0;i<list.length;i++ )
+            {
+                var v = list[i];
+                var version = v.groupPath;
+                version += "/";
+                version += v.shortName;
+                version = version.replace("//","/");
+                if ( jObj.hasLayers )
+                    version += "/layer-final";
+                html += '<option class="version-short" value="'+version+'" title="'+v.longName+'">';
+                html += v.shortName;
+                html += '</option>';
+            }
+            if ( g != "/" && g.length!=0 )
+                html += '</optgroup>';
+        }            
+        html += '</select>';
+        return html;
+    };
+    /**
      * Install the dropdown version list
      */
     this.installDropdown = function() {
         var url = "http://"+window.location.hostname
-            +"/formatter/list?docid="+this.docid+"&listid=versions";
-        if ( this.version1 != undefined && this.version1.length>0 )
-            url += "&version1="+this.version1;
+            +"/formatter/shortlist?docid="+this.docid;
         jQuery.get(url, function(responseText) {
+            var html = self.formatVersionList(responseText);
             var l = jQuery("#list");
-            l.append( responseText );
+            l.append( html );
             // install version dropdown handler
             jQuery("#versions").change(function(){
                 var val = jQuery("#versions").val();

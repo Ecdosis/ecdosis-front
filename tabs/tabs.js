@@ -104,6 +104,8 @@ function tabbed(target,module,tabset,tabs,modules,menuopt)
                 var new_url = "http://"+window.location.hostname+window.location.pathname;
                 obj['module'] = mod_spec;
                 obj['tabset'] = self.tabset;
+                if ( jQuery("#versions").length > 0 )
+                    obj['version1'] = jQuery("#versions").val();
                 if ( docid.length>0 )
                     obj['docid'] = unescape(docid);
                 new_url += "?"+self.objToParams(obj);
