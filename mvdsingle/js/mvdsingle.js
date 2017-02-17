@@ -438,7 +438,7 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
     };
     this.setHnoteWidth= function() {
         var maxHnoteWidth = 0;
-        jQuery("div.hnote, p.p").each(function(){
+        jQuery("div.hnote, div.stage, p.trailer").each(function(){
             var text = jQuery(this).text();
             var lines = text.split("\n");
             for ( var i=0;i<lines.length;i++ )
@@ -450,7 +450,7 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
                 jQuery("#testit").remove();
             }
         });
-        jQuery("div.hnote, p.p").width(Math.round(maxHnoteWidth+10));
+        jQuery("div.hnote, div.stage, p.trailer").width(Math.round(maxHnoteWidth+10));
     };
     this.setStanzaWidth = function() {
         var maxWidth = 0;
