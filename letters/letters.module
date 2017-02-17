@@ -1,0 +1,49 @@
+<?php
+function letters_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"letters") )
+    {
+        drupal_add_css(drupal_get_path('module','letters').'/css/letters.css','file');
+    }
+}
+function build_letters_args()
+{
+    $args = "";
+    if ( array_key_exists ("docid", $_GET) )
+        $args .= '&docid='.$_GET["docid"];
+    if ( array_key_exists ("target", $_GET) )
+        $args .= '&target='.$_GET["target"];
+    else
+        $args .= '&target=content';
+    if ( strpos($args,'&')==0 )
+        $args = substr($args,1);
+    return $args;
+}
+function letters_block_info() {
+  $blocks['letters'] = array(
+    'info' => t('Display page images of a letter'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function letters_help($path, $arg) {
+    switch ($path)
+    {
+        case "admin/help#letters":
+            return '<p>' .
+                t("Display page images of one letter")
+                . '</p>';
+            break;
+    }
+}
+function letters_block_view($delta = '') {
+  switch ($delta) {
+    case 'letters':
+      $args = build_letters_args();
+      $mod_path = drupal_get_path('module', 'letters');
+      $block['content'] = '<script type="text/javascript" src="'.$mod_path
+          .'/js/letters.js?'.$args.'"></script>';
+      return $block;
+  }
+}
+

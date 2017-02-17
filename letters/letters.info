@@ -1,0 +1,4 @@
+name = letters
+description = Display the images of a letter as a scrolling list
+core = 7.x
+configure = admin/config/content/letters

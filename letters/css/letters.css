@@ -1,0 +1,12 @@
+#images { border: 0; padding: 0;margin:auto}
+.description { margin-top:1em;text-align:center;}
+.description span {border-bottom:1px solid black;padding-bottom:0.2em}
+#metadata li {list-style:none;font-size:1.2em}
+.prompt {font-weight:bold}
+#loading p {text-align:center;margin-top:2em;font-size:1.5em}
+.blinking {
+  animation: blinker 1s linear infinite;
+}
+@keyframes blinker {  
+  50% { opacity: 0.0; }
+}
