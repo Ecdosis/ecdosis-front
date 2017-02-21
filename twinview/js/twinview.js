@@ -143,6 +143,18 @@ function twinview( docid, version1, target )
         slop += this.getCssParam(this.current,'padding-right');
         return slop;
     };
+    this.paramValue = function(val) {
+        var res = 0;
+        for (var i=1;i<=val.length;i++)
+        {
+            var num = val.substring(0,i)
+            if ( !isNaN(parseInt(num)) )
+                res = parseInt(num);
+            else
+                break;
+        }
+        return res;
+    };
     /**
      * Scale the text size to fit the available space
      */
@@ -155,26 +167,28 @@ function twinview( docid, version1, target )
         // compute text size
         jQuery("#sides").append('<span id="measure-text">'
             +this.lines[this.longest]+'</span>');
-        var font = lay.css("font-family");
-        jQuery("#measure-text").css("font-family",font);
-        jQuery("#measure-text").css("font-size","12px");
+        var layFont = lay.css("font-family");
+        var laySize = this.paramValue(lay.css("font-size"));
+        jQuery("#measure-text").css("font-family",layFont);
+        jQuery("#measure-text").css("font-size",laySize+"px");
         var maxWidth = jQuery("#measure-text").width();
-        var layWidth = lay.width();
-        layWidth = Math.round(layWidth*3/4);
-        var magnifiedSize = Math.floor(12*layWidth/maxWidth);
+        var layWidth = lay.width()*3/4;
+        var magnifiedSize = laySize*layWidth/maxWidth;
+        // try not to make text too small
         if ( magnifiedSize < 12 )
         {
-            layWidth = Math.round(lay.width()*19/20);
-            magnifiedSize = Math.floor(12*layWidth/maxWidth);
+            layWidth = lay.width()*19/20;
+            magnifiedSize = laySize*layWidth/maxWidth;
         }
-        var newSize = magnifiedSize+"px";
+        var newSize = (magnifiedSize/laySize)*100;
+        // round to 2 decimal places
+        var scaledSize = Math.floor(newSize*100);
+        newSize = scaledSize/100;
         jQuery("#measure-text").remove();
-        lay.css("font-size",newSize);
+        lay.css("font-size",newSize+"%");
         lay.width(jQuery("#scrollframe").width()-this.layerSlop());
-        //console.log("newSize="+newSize);
         var sfh = Math.round(jQuery("#wrapper").height()-jQuery("#tabs").height());
         jQuery("#scrollframe").css("height",sfh+"px");
-        //this.getlayer().css("height",this.getlayer().height()+"px");
         this.setStanzaWidth();
         this.setHnoteWidth();
 
