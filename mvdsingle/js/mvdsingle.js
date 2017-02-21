@@ -436,21 +436,46 @@ function mvdsingle(target,docid,version1,selections,message,userdata)
             }
         });
     };
-    this.setHnoteWidth= function() {
-        var maxHnoteWidth = 0;
-        jQuery("div.hnote, div.stage, p.trailer").each(function(){
-            var text = jQuery(this).text();
+    this.measureChild = function( child ) {
+        var maxWd = 0;
+        if ( child.children().length > 0 )
+        {
+            child.children().each(function(){
+               var wd = jQuery(this).width();
+               var fs = jQuery(this).css("font-size");
+               if ( wd> maxWd )
+               {
+                   console.log("setting maxWd to "+wd);
+                   maxWd = wd;
+               }
+            });
+        }
+        else
+        {
+            var text = child.text();
             var lines = text.split("\n");
             for ( var i=0;i<lines.length;i++ )
             {
-                jQuery(this).append('<span id="testit" style="visibility:hidden">'+lines[i]+'</span>');
+                child.parent().append('<span id="testit" style="visibility:hidden">'+lines[i]+'</span>');
                 var w = jQuery("#testit").width();
-                if ( w > maxHnoteWidth )
-                    maxHnoteWidth = w;
+                if ( w > maxWd )
+                {
+                    console.log("setting maxWd to "+w+" from:"+lines[i]);
+                    maxWd = w;
+                }
                 jQuery("#testit").remove();
             }
+        }
+        return maxWd;
+    };
+    this.setHnoteWidth = function() {
+        var maxHnoteWidth = 0;
+        jQuery("div.stage, p.trailer").each(function(){
+            var wd = self.measureChild(jQuery(this));
+            if ( wd > maxHnoteWidth )
+                maxHnoteWidth = wd;
         });
-        jQuery("div.hnote, div.stage, p.trailer").width(Math.round(maxHnoteWidth+10));
+        jQuery("div.stage, p.trailer").width(Math.round(maxHnoteWidth+10));
     };
     this.setStanzaWidth = function() {
         var maxWidth = 0;

@@ -5,8 +5,9 @@ function twinview( docid, version1, target )
 {
     this.docid = docid;
     this.target = target;
+    this.inFullScreenMode = false;
     /** version to view */
-    this.version1 = version1;
+    this.version1 = version1.replace(/%2F/g,"/");
     var self = this;
     /**
      * Get the jQuery object of the current textarea
@@ -45,7 +46,7 @@ function twinview( docid, version1, target )
     this.recalcPageCentres = function(){
         this.getPageCentres();
         this.getlayer().scrollTop(0);
-        jQuery("#lhs").css('top',"0px"); 
+        jQuery("#lhs_scroll").scrollTop(0); 
     };
     /**
      * Set widths on lhs and rhs
@@ -114,7 +115,7 @@ function twinview( docid, version1, target )
     this.getImageCentres = function()
     {
         var lTops = Array();
-        var imgs = jQuery("#lhs img");
+        var imgs = jQuery("#lhs_bot img");
         var top = 0;
         imgs.each(function(){
             top = Math.round(top);
@@ -235,10 +236,11 @@ function twinview( docid, version1, target )
                     +p.src+'" width="'+w+'" height="'+h+'" title="'
                     +p.n+'" data-n="'+p.n+'"></a>\n';
             }
-            jQuery("#lhs").append(html);
+            jQuery("#lhs_bot").empty();
+            jQuery("#lhs_bot").append(html);
             self.fitText();
             self.getImageCentres();
-            jQuery("#lhs").height(jQuery("#rhs").height());
+            jQuery("#lhs_scroll").height(jQuery("#rhs").height()-jQuery("#tabs").height());
             //self.fitText();
             jQuery("#"+self.target).css("visibility","visible");
             self.recalcPageCentres();
@@ -255,14 +257,6 @@ function twinview( docid, version1, target )
 		  jQuerythis.toggleClass('active');
 		  jQuery('.sxy-zoom-slider .viewer').animate({ left: ($this.offset().left - jQuery('.sxy-zoom-slider').offset().left) });
 	    });
-            /* check if images are higher than screen and text is NOT */
-            var sidesHt = jQuery("#sides").height();
-            if ( self.textEnd < sidesHt && self.imageEnd > sidesHt )
-            {
-                var children = jQuery("#lhs").children().detach();
-                jQuery("#lhs").append('<div id="scrollframe-lhs"></div>');
-                jQuery("#scrollframe-lhs").append(children);
-            }
         });
     };
     /**
@@ -322,7 +316,7 @@ function twinview( docid, version1, target )
         var last = {};
         last.name = "final";
         last.top = this.getlayer()[0].scrollHeight;
-        console.log("scrollHeight="+last.top);
+        //console.log("scrollHeight="+last.top);
         this.rTops.push(last);
         this.sort(this.rTops);
         for ( var i=1;i<this.rTops.length;i++ )
@@ -331,18 +325,18 @@ function twinview( docid, version1, target )
             this.rCentres.push( Math.round(this.rTops[i-1].top+diff/2) );
         }
         this.textEnd = Math.round(this.rTops[this.rTops.length-1].top);
-        this.printArray("raw lCentres", this.lCentres);
-        this.printArray("raw rCentres",this.rCentres);
+        //this.printArray("raw lCentres", this.lCentres);
+        //this.printArray("raw rCentres",this.rCentres);
         // fudge first and last pages which aren't centred
         var wHalfHt = Math.round(jQuery("#scrollframe").height()/2);
         this.rCentres.unshift( wHalfHt );
         this.rCentres.push( this.textEnd-wHalfHt);
-        this.printArray("lCentres before check", this.lCentres);
-        this.printArray("rCentres before check",this.rCentres);
+        //this.printArray("lCentres before check", this.lCentres);
+        //this.printArray("rCentres before check",this.rCentres);
         //this.printArray("rTops",this.rTops);
         this.checkCentres();
-        this.printArray("lCentres", this.lCentres);
-        this.printArray("rCentres", this.rCentres);
+        //this.printArray("lCentres", this.lCentres);
+        //this.printArray("rCentres", this.rCentres);
         //console.log("textEnd="+this.textEnd);
         //console.log("nlines ="+this.lines.length);
     };
@@ -431,7 +425,7 @@ function twinview( docid, version1, target )
         this.fitText();
         this.recalcPageCentres();
         this.getlayer().scrollTop(0);
-        jQuery("#lhs").css('top',"0px");
+        jQuery("#lhs_scroll").scrollTop(0);
     };
     /**
      * Find the longest line in the textarea
@@ -452,24 +446,46 @@ function twinview( docid, version1, target )
             }
         }
     };
-    this.setHnoteWidth= function() {
-        var maxHnoteWidth = 0;
-        jQuery("div.hnote, div.stage, p.trailer").each(function(){
-            var text = jQuery(this).text();
+    this.measureChild = function( child ) {
+        var maxWd = 0;
+        if ( child.children().length > 0 )
+        {
+            child.children().each(function(){
+               var wd = jQuery(this).width();
+               var fs = jQuery(this).css("font-size");
+               if ( wd> maxWd )
+               {
+                   console.log("setting maxWd to "+wd);
+                   maxWd = wd;
+               }
+            });
+        }
+        else
+        {
+            var text = child.text();
             var lines = text.split("\n");
             for ( var i=0;i<lines.length;i++ )
             {
-                jQuery(this).append('<span id="testit" style="visibility:hidden">'+lines[i]+'</span>');
+                child.parent().append('<span id="testit" style="visibility:hidden">'+lines[i]+'</span>');
                 var w = jQuery("#testit").width();
-                if ( w > maxHnoteWidth )
-                    maxHnoteWidth = w;
+                if ( w > maxWd )
+                {
+                    console.log("setting maxWd to "+w+" from:"+lines[i]);
+                    maxWd = w;
+                }
                 jQuery("#testit").remove();
             }
+        }
+        return maxWd;
+    };
+    this.setHnoteWidth = function() {
+        var maxHnoteWidth = 0;
+        jQuery("div.stage, p.trailer").each(function(){
+            var wd = self.measureChild(jQuery(this));
+            if ( wd > maxHnoteWidth )
+                maxHnoteWidth = wd;
         });
-        var rhsWidth = jQuery("#rhs").width();
-        if ( maxHnoteWidth > rhsWidth )
-            maxHnoteWidth = rhsWidth;
-        jQuery("div.hnote, div.stage, p.trailer").width(Math.round(maxHnoteWidth+10));
+        jQuery("div.stage, p.trailer").width(Math.round(maxHnoteWidth+10));
     };
     this.setStanzaWidth = function() {
         var maxWidth = 0;
@@ -482,15 +498,169 @@ function twinview( docid, version1, target )
         jQuery("div.stanza").width(stanzaWidth);
     };
     /**
+     * Format theJSON short version list into HTML. Can be oldstyle.
+     * @param jObj the JSON short version table or oldstyle long.
+     */
+    this.formatVersionList= function(jObj) {
+        var groups = {};
+        var versions = jObj.versions;
+        var html = '<span class="description">';
+        html += jObj.description;
+        html += '</span>';
+        html +='<select id="versions" class="list" name="versions">';
+        for ( var i=0;i<versions.length;i++ )
+        {
+            var list = groups[versions[i].groupPath];
+            if ( list == undefined )
+            {
+                list = Array();
+                groups[versions[i].groupPath] = list;
+            }
+            list.push(versions[i]);
+        }
+        for (var g in groups )
+        {
+            if ( g != "/" && g.length!=0 )
+                html += '<optgroup class="group" label="'+this.stripSlash(g)+'">';
+            list = groups[g];
+            for ( var i=0;i<list.length;i++ )
+            {
+                var v = list[i];
+                var version = v.groupPath;
+                version += "/";
+                version += v.shortName;
+                version = version.replace("//","/");
+                if ( jObj.hasLayers )
+                    version += "/layer-final";
+                var selected = "";
+                if ( version == this.version1 )
+                    selected = ' selected="selected"';
+                html += '<option class="version-short" value="'+version
+                    +'" title="'+v.longName+'"'+selected+'>';
+                html += v.shortName;
+                html += '</option>';
+            }
+            if ( g != "/" && g.length!=0 )
+                html += '</optgroup>';
+        }
+        html += '</select><span id="source"></span>';
+        return html;
+    };
+    /**
+     * Update the source string after the dropdown
+     */
+    this.updateSource = function() {
+        var title = jQuery("#versions option:selected").attr("title");
+        //console.log(title);
+        jQuery("#source").text(title);
+    };
+    /**
+     * Adjust the height of toolbars
+     */
+    this.adjustToolbars = function() {
+        var lhsHt = jQuery("#lhs_top").height();
+        var rhsHt = jQuery("#tabs").height();
+        if ( lhsHt < rhsHt )
+        {
+            var diff = Math.round(rhsHt-lhsHt);
+            var topPad = Math.floor(diff/2);
+            var botPad = diff-topPad;
+            jQuery("#lhs_top").css("padding-top",topPad+"px");
+            jQuery("#lhs_top").css("padding-bottom",botPad+"px");
+        }
+        else if ( lhsHt > rhsHt )
+        {
+            jQuery("#tabs").height(lhsHt);
+        }
+    };
+    /**
+     * Install the dropdown version list
+     */
+    this.installDropdown = function() {
+        var url = "http://"+window.location.hostname
+            +"/formatter/shortlist?docid="+this.docid;
+        jQuery.get(url, function(responseText) {
+            var html = self.formatVersionList(responseText);
+            var l = jQuery("#lhs_top");
+            l.empty();
+            l.append( '<div id="lhs_top_centre">'+html+'</div>' );
+            // install version dropdown handler
+            jQuery("#versions").change(function(){
+                var val = jQuery("#versions").val();
+                self.updateSource();
+                self.version1 = val;
+                self.getText(self.docid);
+            });
+            self.updateSource();
+            self.adjustToolbars();
+        });
+    };
+    /**
+     * Remove layer from version
+     * @param version the full version name
+     * @return the truncated version id
+     */
+    this.layerlessId= function(version) {
+        var index = version.lastIndexOf("/layer-");
+        if ( index == -1 )
+            return version;
+        else
+            return version.substring(0,index);
+    };
+    this.escapeFullScreen = function() {
+        var rfs = document.cancelFullScreen
+            ||document.webkitCancelFullScreen
+            ||document.mozCancelFullScreen
+            ||document.exitFullscreen;
+        self.inFullScreenMode = false;
+        if (rfs) 
+            rfs.call(document);
+        var timeout = (navigator.userAgent.indexOf("Safari")>-1)?1500:100;
+        setTimeout(function(){
+            self.getText(self.docid);
+        }, timeout );
+    };
+    this.enterFullScreen = function() {
+        var el = jQuery("#tabs-content")[0];
+        var rfs = el.requestFullScreen
+         || el.webkitRequestFullScreen
+         || el.mozRequestFullScreen
+         || el.msRequestFullscreen;
+        this.inFullScreenMode = true;
+        rfs.call(el);
+        this.getText(this.docid);
+    };
+    /**
+     * Add the full screen button
+     */
+    this.installFullScreenHandler = function() {
+        jQuery("#ms-fullscreen").click(function() {
+            if ( !self.inFullScreenMode )
+                self.enterFullScreen();
+            else
+                self.escapeFullScreen();
+        });
+        jQuery(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', 
+            function(e) {
+                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+                var event = state ? 'FullscreenOn' : 'FullscreenOff';
+                if ( event == "FullscreenOff" && self.inFullScreenMode )
+                    self.escapeFullScreen();
+            });
+    };
+    /**
      * Fetch the text from the server via its docid
      */
     this.getText = function(docid)
     {
         var url = "http://"+window.location.hostname+"/compare/layers?docid="+docid;
-        url += "&version1="+this.version1;
+        url += "&version1="+this.layerlessId(this.version1);
         jQuery.get(url,function(data) {
-            jQuery('head').append('<style type="text/css">'+data.css+'</style>\n');
-            var html = '<table><tr><td class="empty-tab">empty</td>';
+            jQuery("#twinview_css").remove();
+            jQuery('head').append('<style id="twinview_css" type="text/css">'+data.css+'</style>\n');
+            jQuery("#tabs").empty();
+            var html = '<table><tr><td class="empty-tab"></td>';
+            jQuery("#scrollframe").empty();
             for ( var i=0;i<data.layers.length;i++ )
             {
                 jQuery("#scrollframe").append('<div class="text-inactive" id="layer-'
@@ -502,9 +672,14 @@ function twinview( docid, version1, target )
             }
             html += '</tr></table>';
             jQuery("#tabs").append(html);
+            var button = "fa-expand";
+            if ( self.inFullScreenMode )
+                button ="fa-compress";
+            jQuery("#tabs .empty-tab").append('<i id="ms-fullscreen" class="fa fa-1x '+button+'"></i>');
             jQuery("#tabs td").last().removeClass("inactive-tab");
             jQuery("#tabs td").last().addClass("active-tab");
             self.current = "layer-final";
+            self.installFullScreenHandler();
             jQuery("#layer-final").attr("class","text-active");
             jQuery(".inactive-tab").click(function(){
                 jQuery(this).unbind("click");
@@ -514,32 +689,27 @@ function twinview( docid, version1, target )
                 self.switchLayer(jQuery(this).text());
             });
             self.recalcText();
-            self.getPageImages(docid);
+            self.getPageImages(self.docid);
             jQuery("#scrollframe").scroll(function(e){
                 var sp = e.target;
                 var top = jQuery(sp).scrollTop();
-                // console.log("top="+top);
                 var bot = top+jQuery("#scrollframe").height();
                 var lCentre = self.interpolate( (top+bot)/2 );
-                //console.log("top="+top+" bot="+bot+" lCentre="+lCentre+" rVal="+(top+bot)/2);
-                lCentre -= jQuery("#lhs").height()/2;
+                lCentre -= jQuery("#lhs_scroll").height()/2;
                 if ( top == 0 )
-                    jQuery("#lhs").css('top',"0px");
+                    jQuery("#lhs_scroll").scrollTop(0);
                 else
-                    jQuery("#lhs").css('top',-Math.round(lCentre)+"px");
+                    jQuery("#lhs_scroll").scrollTop(Math.round(lCentre));
                 if ( jQuery(sp).scrollTop() >= self.textEnd-jQuery(sp).height() )
                 {
-                    var finalImageOffset = self.imageEnd-jQuery("#lhs").height();
-                    jQuery("#lhs").css('top',-finalImageOffset+"px");
+                    var finalImageOffset = self.imageEnd-jQuery("#lhs_scroll").height();
+                    jQuery("#lhs_scroll").scrollTop(finalImageOffset);
                 }
-            });
-            self.getlayer().keydown(function(){
-                self.dirty = true;
-                //console.log("Set dirty to true");
             });
         });
     };
-    var html = '<div id="wrapper"><div id="sides"><div id="lhs"></div>'
+    var html = '<div id="wrapper"><div id="sides"><div id="lhs">';
+    html += '<div id="lhs_top"></div><div id="lhs_scroll"><div id="lhs_bot"></div></div></div>';
     html += '<div id="rhs"><div id="tabs"></div><div id="scrollframe">'
     html += '</div></div></div></div>';
     jQuery("#"+this.target).empty();
@@ -547,6 +717,7 @@ function twinview( docid, version1, target )
     var tWidth = jQuery("#toolbar").width();
     var wWidth = jQuery(window).width();
     jQuery("#sides").width(wWidth-tWidth);
+    this.installDropdown();
     this.getText(this.docid);
 }
 function get_one_tw_param( params, name )
