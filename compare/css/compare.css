@@ -101,3 +101,5 @@ span.added
 { 
 	color: blue 
 }
+.description {margin-right:0.5em}
+#source1,#source2 {margin-left:.5em;font-weight:normal;}

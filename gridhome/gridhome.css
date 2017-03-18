@@ -40,6 +40,10 @@
     text-align:left;
 }
 
+.gridhom-colum img {
+    width: 100%;
+}
+
 .gridhome-column + .gridhome-column {
     margin-left: 1.6%;
 }

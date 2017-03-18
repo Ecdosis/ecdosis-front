@@ -15,35 +15,93 @@ function comparer( target, docid, modpath )
             select.prev().text(parts[1]);
     };
     /**
-     * Get a list menu
-     * @param version1 the version to use as the default
-     * @param name the name and ID of the list
-     * @param onchange a javascript function to call on list change
-     * @param longNameId ID of long name
-     * @param parent the id of the enclsing div to add it to
+     * Strip the leading slash IF present
      */
-    this.getList = function( version1, name, longNameId, parentId )
+    this.stripSlash= function(str) {
+        if ( str.length>0 && str[0]=='/' )
+            return str.substring(1);
+        else
+            return str;
+    };
+    /**
+     * Update the source string after the dropdown
+     * id the id of the version list to update the source of
+     */
+    this.updateSource = function(id) {
+        var title = jQuery("#version"+id+" option:selected").attr("title");
+        jQuery("#source"+id).text(title);
+    };
+    /**
+     * Format theJSON version list into HTML. 
+     * @param jObj the JSON short version table
+     * @param selV the selected version
+     * @param idthe suffix id of the list
+     * @return the html of the list
+     */
+    this.formatVersionList = function(jObj,selV,id) {
+        var groups = {};
+        var versions = jObj.versions;
+        var html = '<span class="description">';
+        html += jObj.description;
+        html += '</span>';
+        html +='<select id="version'+id+'" class="list" name="version'+id+'">';
+        for ( var i=0;i<versions.length;i++ )
+        {
+            var list = groups[versions[i].groupPath];
+            if ( list == undefined )
+            {
+                list = Array();
+                groups[versions[i].groupPath] = list;
+            }
+            list.push(versions[i]);
+        }
+        for (var g in groups )
+        {
+            if ( g != "/" && g.length!=0 )
+                html += '<optgroup class="group" label="'+this.stripSlash(g)+'">';
+            list = groups[g];
+            for ( var i=0;i<list.length;i++ )
+            {
+                var v = list[i];
+                var version = v.groupPath;
+                version += "/";
+                version += v.shortName;
+                version = version.replace("//","/");
+                var selected = "";
+                if ( version == selV )
+                    selected = ' selected="selected"';
+                html += '<option class="version-short" value="'+version
+                    +'" title="'+v.longName+'"'+selected+'>';
+                html += v.shortName;
+                html += '</option>';
+            }
+            if ( g != "/" && g.length!=0 )
+                html += '</optgroup>';
+        }
+        html += '</select><span id="source'+id+'"></span>';
+        return html;
+    };
+    /**
+     * Get a list menu
+     * @param parent the id of the enclosing div to add it to
+     * @param version the version selected in this list
+     * @param idsuffixid of the version list to build
+     */
+    this.getList = function( parentId,version,id )
     {
         var url = "http://"+window.location.host+"/compare/list";
         url += "?docid="+this.docid;
-        url += "&name="+name;
-        url += "&version1="+version1;
-        url += "&style=list/twin-list";
-        url += "&long_name_id="+longNameId;
         jQuery.get( url, function(data) 
         {    
-            if ( data != undefined && data.length > 0 )
+            if ( data != undefined )
             {
-                jQuery("#"+parentId).prepend( data );
+                jQuery("#"+parentId).append( self.formatVersionList(data,version,id) );
                 self.setSelectLabel(jQuery("#"+parentId+" select"));
-                // replace popup description with selected version name
-                var id = longNameId.substr("long_name".length,longNameId.length);
-                var desc = jQuery("#long_name"+id);
-	            desc.text(jQuery("#version"+id+" :selected").attr("title"));
                 jQuery("#version"+id).change( function(){
                     self.setSelectLabel(jQuery("#version"+id));
                     // reload the versions
                     var idStr = "#version"+id;
+                    self.updateSource(id);
                     if ( idStr == "#version1" )
                         self.version1 = jQuery("#version1").val();
                     else
@@ -52,6 +110,7 @@ function comparer( target, docid, modpath )
                     self.getTextVersion(self.version1,
                         self.version2,"deleted","leftColumn");
                 });
+                self.updateSource(id);
             }
         })
         .fail(function() {
@@ -93,6 +152,10 @@ function comparer( target, docid, modpath )
                 else
                     self.getTextVersion(self.version2,
                         self.version1,"added","rightColumn");
+                if ( parentId == "leftColumn" && self.version1.indexOf("layer-final")==-1 )
+                    jQuery("#leftColumn .merged").css("color","dimgrey");
+                else if ( parentId == "rightColumn" && self.version2.indexOf("layer-final")==-1 )
+                    jQuery("#rightColumn .merged").css("color","dimgrey"); 
             }
         })
         .fail(function() {
@@ -114,8 +177,7 @@ function comparer( target, docid, modpath )
             if ( data != undefined && data.length > 0 )
             {
                 self.version2 = data;
-                self.getList( self.version2, "version2", 
-                    "long_name2", "rightWrapper" );
+                self.getList( "rightWrapper",self.version2.trim(),2 );
                 // set content for left hand side
                 self.getTextVersion(self.version1,
                     self.version2,"deleted","leftColumn");
@@ -147,8 +209,7 @@ function comparer( target, docid, modpath )
             function( data ) {
                 self.title = data;
                 jQuery("#top").prepend( data );
-                self.getList(self.version1, 
-                    "version1", "long_name1", "leftWrapper" );
+                self.getList( "leftWrapper",self.version1,1 );
                 self.getNextVersion( self.version1 );
          })
         .fail( function() {
@@ -238,7 +299,7 @@ function comparer( target, docid, modpath )
      */
     this.synchroScroll = function()
     {
-	    var leftDiv = jQuery("#leftColumn");
+        var leftDiv = jQuery("#leftColumn");
         var leftTop = leftDiv.scrollTop();
         var rightDiv = jQuery("#rightColumn");
         var rightTop = rightDiv.scrollTop();
@@ -257,7 +318,8 @@ function comparer( target, docid, modpath )
                     var rightId = self.rightOffsetsToIds[rIndex].id;
                     var leftId = "d"+rightId.substr(1);
                     // find offset of left id
-                    leftOffset = self.leftIdsToOffsets[leftId]-leftDiv.height()/2;
+                    leftOffset = Math.round(self.leftIdsToOffsets[leftId]
+                        -leftDiv.height()/2);
                     if ( leftOffset < 0 )
                         leftOffset = 0;
                 }
@@ -284,7 +346,8 @@ function comparer( target, docid, modpath )
                     var leftId = self.leftOffsetsToIds[lIndex].id;
                     var rightId = "a"+leftId.substr(1);
                     // find offset of right id
-                    rightOffset = self.rightIdsToOffsets[rightId]-rightDiv.height()/2;
+                    rightOffset = Math.round(self.rightIdsToOffsets[rightId]
+                        -rightDiv.height()/2);
                     if ( rightOffset < 0 )
                         rightOffset = 0;
                 }
@@ -294,7 +357,7 @@ function comparer( target, docid, modpath )
                 self.setScrollTimeout(); 
             }
             else
-                console.log("ignoring right scroll")
+                console.log("ignoring right scroll");
         }
         // wait until one side stabilises
     }

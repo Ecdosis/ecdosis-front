@@ -1,0 +1,34 @@
+<?php
+function simplehome_preprocess_page(&$vars)
+{
+    if ( strpos(request_uri(),"simplehome")||drupal_is_front_page() )
+    {
+        drupal_add_css(drupal_get_path('module','simplehome').'/simplehome.css','file');
+    }
+}
+function simplehome_block_info() {
+  $blocks['simplehome'] = array(
+    'info' => t('Displays a simple home page'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+function simplehome_help($path, $arg) {
+switch ($path) 
+  {
+    case "admin/help#simplehome":
+      return '<p>' . t("Displays a simple home page") . '</p>';
+      break;
+  }
+}
+function simplehome_block_view($delta = '') {
+  switch ($delta) {
+    case 'simplehome':
+      $mod_path = drupal_get_path('module', 'simplehome');
+      $block['content'] = '<script type="text/javascript" src="'
+          .$mod_path.'/simplehome.js?target=content&modpath='.$mod_path.
+          '&docid=english/harpur/about/home"></script>';
+      return $block;
+  }
+}
+

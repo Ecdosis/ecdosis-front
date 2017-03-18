@@ -447,18 +447,34 @@ function twinview( docid, version1, target )
     this.recalcText = function()
     {
         var lay = this.getlayer();
-        var text = lay.text();
-        this.lines = text.split("\n");
+        var kids = lay.children();
         this.longest = 0;
         this.longestLen = 0;
-        for ( var i=0;i<this.lines.length;i++ )
-        {
-            if ( this.lines[i].length > this.longestLen )
+        kids.each(function(){
+            var wspace = jQuery(this).css("white-space");
+            if ( wspace == "pre" )
             {
-                this.longest = i;
-                this.longestLen = this.lines[i].length;
+                var lines = jQuery(this).text().split("\n");
+                if ( self.lines == undefined )
+                {
+                    start = 0;
+                    self.lines = lines;
+                }
+                else 
+                {
+                    start = self.lines.length;
+                    self.lines = self.lines.concat(lines);
+                }
+                for ( var i=0;i<lines.length;i++ )
+                {
+                    if ( lines[i].length > self.longestLen )
+                    {
+                        self.longest = i+start;
+                        self.longestLen = lines[i].length;
+                    }
+                }
             }
-        }
+        });
     };
     this.measureChild = function( child ) {
         var maxWd = 0;
@@ -469,7 +485,7 @@ function twinview( docid, version1, target )
                var fs = jQuery(this).css("font-size");
                if ( wd> maxWd )
                {
-                   console.log("setting maxWd to "+wd);
+                   //console.log("setting maxWd to "+wd);
                    maxWd = wd;
                }
             });

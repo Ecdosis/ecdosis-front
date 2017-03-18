@@ -29,3 +29,7 @@ body {overflow:hidden}
 #lhs_top {text-align:center}
 #lhs,#rhs {width: 50%}
 #lhs_top_centre {margin: 0 auto}
+/* layers */
+#layer-final {color:black}
+#layer-1,#layer-2,#layer-3,#layer-4,#layer-5,#layer-6,#layer-7,#layer-8,#layer-9 {color:DimGrey}
+

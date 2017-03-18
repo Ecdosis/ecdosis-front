@@ -1,0 +1,4 @@
+name = SimpleHome
+description = Display a simple homepage
+core = 7.x
+configure = admin/config/content/simplehome
